@@ -1,228 +1,174 @@
-# Adwise — Figma → Gutenberg Block Theme (blueprint)
+# Adwise Blueprint — WordPress Block Theme (Figma / Claude Design → Gutenberg)
 
-Czysty blueprint pod workflow **Figma → custom bloki Gutenberga** (React + server-side render, `@wordpress/scripts` + Webpack 5, SCSS/BEM, PHP). Język: polski (pl_PL).
+Blueprint startowy (LocalWP, z GitHuba). Baseline gotowy: WP theme + login KV (`inc/adwise-login.php`) + (zwykle) WP MCP. Zawiera **dwie ścieżki** budowy bloków: **Figma** lub **Claude Design (export)**. Budowa bloków IDENTYCZNA w obu — różni się tylko „przód" (skąd design). React + server-side render, `@wordpress/scripts` + Webpack 5, SCSS/BEM, PHP. Język: pl_PL.
 
-Dokumentacja workflow jest **self-contained** w `docs/` — klonujesz repo i masz wszystko. Wartości specyficzne (tokeny, prefiksy) odczytuj z plików projektu (`style.css`, `theme.json`, `functions.php`), nie hardcoduj.
-
-**Namespace bloków / textdomain / prefix PHP = `adwise`** (folder theme'u). Po sklonowaniu pod nowy projekt: zmień nazwę folderu, `Theme Name` w `style.css`, stałe `ADWISE_*`, textdomain, namespace bloków, brand w `inc/adwise-login.php`.
+Wartości specyficzne (nazwa, tokeny, prefiksy) odczytuj z `style.css` / `theme.json` / `functions.php` i z designu — nie hardcoduj.
 
 ---
 
-## Index plików — co gdzie
+## ⚡ FIRST-RUN — zrób PRZED wszystkim (raz, po wgraniu z GitHuba)
+
+1. **Wybór ścieżki — zapytaj usera:** „Budujemy z **Figmy** czy z **Claude Design (export)**?"
+2. **Prune — usuń pliki nieużywanej ścieżki:**
+   - **Figma** → usuń `docs/claude-design-export.md` + `docs/html-to-block.md`
+   - **Claude Design** → usuń `docs/figma-to-block.md`
+3. **Wprowadzenie** — przedstaw plan i kolejność (niżej).
+4. **Preflight** — wykryj tooling, potwierdź pluginy (niżej).
+5. **Kickoff** — zadaj pytania (wszystkie naraz, niżej), utwórz `project.md` z `docs/project-template.md`.
+6. **Plan → akceptacja** przed kodem.
+7. **Aktywacja theme** — zaproponuj `wp theme activate adwise` (WP-CLI lub WP MCP) → **zapytaj i czekaj na potwierdzenie**.
+
+**Login KV już wdrożony** (`inc/adwise-login.php`) — NIE odbudowuj; rebrand pod inny brand tylko przez `docs/recipes/login-page/brand-swap.md`.
+
+### Wprowadzenie (mów userowi na starcie)
+> Plan: 1) wybór ścieżki (Figma / Claude Design) + sprzątnięcie zbędnych plików, 2) preflight (WP MCP / Figma MCP / WP-CLI / pluginy), 3) tokeny → `theme.json`, 4) bloki sekcja po sekcji (plan → akceptacja → kod), 5) strony (WP MCP / WP-CLI), 6) build + test (edytor + front), 7) aktywacja theme. Lecę?
+
+### Preflight — sprawdź, potwierdź z userem (✓/✗)
+- **WP MCP Adapter** (akcje runtime) — wykryj tool MCP `wordpress` / `mcp-adapter-discover-abilities`. ✗ → fallback WP-CLI / ręczny snippet (`docs/wp-mcp.md`).
+- **Figma MCP** (`figma:*` / `use_figma`) — TYLKO ścieżka Figma. ✗ → user dostarcza screeny/wartości ręcznie.
+- **WP-CLI** (`wp --version`) + **Node/npm** (`npm -v`).
+- **Skille Claude:** `claude-md-management`, `time-tracker`, `context7` (+ `figma` dla ścieżki Figma).
+- **Pluginy WP** (wg zakresu): CF7 (formularz), LiteSpeed (cache → optymalizacja), WPS Hide Login + Limit Login Attempts (login), SVG support — **potwierdź które masz**.
+→ Wypisz tabelę braków + co znaczą (Claude działa sam vs dowozi snippet), **czekaj na potwierdzenie**.
+
+### Kickoff — pytania (wszystkie w jednej wiadomości)
+1. **Theme czy plugin?** (plugin → `docs/plugin-mode.md`)
+2. **Nazwa + namespace + prefix PHP** (namespace = folder theme'u/plugin).
+3. **Źródło designu** — Figma link / file key **lub** ścieżka folderu exportu Claude Design. Budujemy **site (bloki) / produkt-wtyczkę / oba**?
+4. **Zakres** — single landing / multi-page? ile stron i szablonów?
+5. **CPT / taxonomie?** (`docs/patterns/dynamic-blocks.md`)
+6. **Custom funkcje** — CF7 / slider / grid dynamiczny / inne integracje?
+7. **Środowisko** — LocalWP z blueprinta + domena prod + hosting/cache (LiteSpeed?) + **WP MCP Adapter** skonfigurowany (WP 6.9+, `mcp-adapter`, App Password)?
+
+`project.md` = **utrzymywany plik konfiguracyjny** (env/blueprint/WP MCP/tokeny/bloki/decyzje) — twórz na starcie, aktualizuj po zmianach. `.mcp.json` = config połączenia MCP (`docs/wp-mcp.md`). Oba w `.gitignore` — per-projekt/sekrety (App Password), NIE commituj do blueprintu.
+
+---
+
+## Index docs (`docs/`)
 
 | Plik | Zawartość | Tryb |
 |------|-----------|------|
-| **CLAUDE.md** (ten) | Reguły, konwencje bloków, decision-guides, workflow, zasady bezwzględne | Auto-load |
-| **project.md** (root) | Stan projektu: tokeny, strony, bloki, decyzje, log. Aktualizuj po każdej zmianie | Auto-load |
-| **docs/figma-to-block.md** | Pobieranie z Figmy (kolejność API, tokeny → theme.json), Figma → clamp | Ad-hoc |
-| **docs/css-conventions.md** | BEM, breakpointy, clamp, sekcja/inner, box-sizing, hover, iOS, tel/mailto | Ad-hoc |
-| **docs/block-template.md** | Bare scaffolding nowego bloku (block.json/index/edit/save/render/scss/view) | Ad-hoc |
-| **docs/project-template.md** | Szablon do utworzenia `project.md` na nowym projekcie | Ad-hoc |
-| **docs/patterns/navbar-menu.md** | Navbar sticky + live preview WP menu + hamburger + mobile | Ad-hoc |
-| **docs/patterns/forms.md** | CF7: preview w edytorze, walidacja, custom submit | Ad-hoc |
-| **docs/patterns/backgrounds.md** | Tło sekcji (desktop/mobile, kształtne SVG), `<img>` vs background-image | Ad-hoc |
-| **docs/patterns/media-images.md** | Obrazy: `object{id,url,alt}`, responsive srcset, media-remove, SVG upload | Ad-hoc |
-| **docs/patterns/buttons-links.md** | Button + LinkControl popover, arrow animation, notched, URL chip | Ad-hoc |
-| **docs/patterns/dynamic-blocks.md** | WP_Query + ServerSideRender + REST + load more | Ad-hoc |
-| **docs/patterns/slider.md** | Swiper (karuzele, thumbs), gotcha importu CSS | Ad-hoc |
-| **docs/patterns/animations.md** | Reveal (vanilla IntersectionObserver default, GSAP opcjonalnie) | Ad-hoc |
-| **docs/patterns/editor-gotchas.md** | Sidebar vs inline, content-limit, template parts, SSR pułapki | Ad-hoc |
-| **docs/plugin-mode.md** | Bloki jako plugin do istniejącego site'u (bootstrap, tokeny, scope, template) | Ad-hoc |
-| **docs/optymalizacja.md** | Performance & a11y: cache, obrazy, fonty, JS, Core Web Vitals, WP_Query | Ad-hoc |
-| **docs/migracja-prod.md** | Wdrożenie dev→prod: search-replace, SSL, cache, hardening, checklist | Ad-hoc |
-| **docs/recipes/login-page/** | Branded login URL + KV + security hardening (już wpięte — patrz niżej) | Ad-hoc |
+| **CLAUDE.md** (ten) | Reguły, first-run, decision-guides, zasady | Auto-load |
+| **docs/figma-to-block.md** | *Front Figma:* API, tokeny → theme.json, Figma → clamp | Auto-load (ścieżka Figma) |
+| **docs/claude-design-export.md** | *Front Claude Design:* anatomia exportu, kolejność czytania | Auto-load (ścieżka Claude Design) |
+| **docs/html-to-block.md** | *Front Claude Design:* konwersja HTML → bloki (Tryb A/B, wp_insert_post) | Ad-hoc (ścieżka Claude Design) |
+| **docs/css-conventions.md** | BEM, breakpointy, clamp, sekcja/inner, box-sizing, hover, iOS, tel | Auto-load |
+| **docs/block-template.md** | Bare scaffolding bloku | Auto-load |
+| **docs/project-template.md** | Szablon `project.md` | Ad-hoc |
+| **docs/patterns/** | navbar-menu, forms, backgrounds, media-images, buttons-links, dynamic-blocks, slider, animations, editor-gotchas | Ad-hoc |
+| **docs/plugin-mode.md** | Bloki jako plugin (bootstrap, tokeny, scope, template) | Ad-hoc |
+| **docs/wp-mcp.md** | Akcje runtime (WP MCP Adapter): postaw stronę, seed CPT, CF7 | Ad-hoc |
+| **docs/optymalizacja.md** | Performance & a11y: cache, obrazy, fonty, JS, CWV, WP_Query | Ad-hoc |
+| **docs/migracja-prod.md** | Wdrożenie dev→prod | Ad-hoc |
+| **docs/recipes/login-page/** | Rebrand login KV (live: `inc/adwise-login.php`) | Ad-hoc |
 
-**Auto-load przy starcie:** ten CLAUDE.md + `project.md`.
-**Ad-hoc:** czytaj `docs/<temat>.md` dopiero gdy pracujesz nad tym tematem (token efficiency — nie ładuj wszystkiego naraz).
+**Auto-load:** CLAUDE.md + front wybranej ścieżki + docs/css-conventions.md + docs/block-template.md + `project.md` (jeśli istnieje). Patterns/reszta — ad-hoc.
 
-### Decision-guide: zadanie → który plik
+### Decision-guide: zadanie → plik
 | Robię… | Czytam |
 |--------|--------|
-| Nowy blok od zera | docs/block-template.md + docs/figma-to-block.md |
-| Navbar / nawigacja / menu | docs/patterns/navbar-menu.md |
-| Formularz kontaktowy | docs/patterns/forms.md |
-| Tło sekcji (hero, overlay) | docs/patterns/backgrounds.md |
-| Zdjęcia, galeria, ikony, logo | docs/patterns/media-images.md |
-| Button / CTA / link | docs/patterns/buttons-links.md |
-| Grid postów / CPT / archiwum | docs/patterns/dynamic-blocks.md |
-| Slider / karuzela | docs/patterns/slider.md |
-| Animacje scroll/reveal | docs/patterns/animations.md |
+| Pobieram design (Figma) | docs/figma-to-block.md |
+| Mam export Claude Design | docs/claude-design-export.md |
+| Konwersja HTML → bloki | docs/html-to-block.md |
+| Nowy blok od zera | docs/block-template.md + front ścieżki |
+| Navbar / menu | docs/patterns/navbar-menu.md |
+| Formularz | docs/patterns/forms.md |
+| Tło sekcji | docs/patterns/backgrounds.md |
+| Zdjęcia/ikony/logo | docs/patterns/media-images.md |
+| Button / CTA | docs/patterns/buttons-links.md |
+| Grid postów / CPT | docs/patterns/dynamic-blocks.md |
+| Slider | docs/patterns/slider.md |
+| Animacje | docs/patterns/animations.md |
 | Coś nie działa w edytorze | docs/patterns/editor-gotchas.md |
-| Bloki jako plugin (istniejący site) | docs/plugin-mode.md |
-| Performance / Core Web Vitals / a11y | docs/optymalizacja.md |
-| Wdrożenie na produkcję | docs/migracja-prod.md |
-| Strona logowania | docs/recipes/login-page/ |
-
----
-
-## Start nowego projektu z tego blueprintu
-
-Blueprint daje gotowy, buildowalny scaffold (zero bloków). Na starcie:
-- **Jest `project.md` wypełniony?** → masz kontekst (tokeny, bloki, decyzje). NIE pytaj o to, co tam jest — działaj. Po każdej istotnej zmianie aktualizuj `project.md`.
-- **Nowy projekt?** → zadaj pytania kickoff (WSZYSTKIE naraz), zaktualizuj `project.md` (szablon: `docs/project-template.md`), wgraj tokeny po analizie Figmy.
-
-### Pytania kickoff (nowy projekt — w jednej wiadomości)
-1. **Nazwa + namespace + prefix PHP** (z brandu/Figmy; namespace = folder theme'u).
-2. **Design** — link / file key Figma.
-3. **Zakres** — single landing / multi-page? ile stron i szablonów?
-4. **CPT / taksonomie?** (bloki dynamiczne → docs/patterns/dynamic-blocks.md)
-5. **Custom funkcje** — formularz (CF7?), slider, grid dynamiczny, inne integracje?
-6. **Środowisko** — dev (LocalWP?) + domena prod + hosting/cache (LiteSpeed?).
-7. **Login** — slug logowania + brand login KV (patrz „Co już jest wpięte").
-
-Plugin do istniejącego site'u zamiast standalone theme? → przeczytaj `docs/plugin-mode.md` (inny bootstrap, emisja tokenów, scope).
-
----
-
-## Co już jest wpięte (blueprint)
-
-- **Build:** `webpack.config.js` auto-discovery `blocks/*/index.js|view.js` + CopyWebpackPlugin (`block.json` + `*.php` → `build/`). Fallback entry `assets/src/index.js` → build przechodzi przy zero bloków.
-- **Rejestracja bloków:** glob `build/blocks/*/block.json` w `functions.php`.
-- **SVG upload:** mimes + real-MIME override + minimal sanitizer + preview w media library (cap `edit_posts`).
-- **Menu:** `add_theme_support('menus')` + `register_nav_menus` (primary, footer) → Wygląd → Menu.
-- **Content-length helper:** limit długości RichText (mnożniki `ADWISE_CL_*` w functions.php).
-- **Anchor injection:** id z atrybutu `anchor` wstrzykiwany do bloków SSR.
-- **Smooth scroll + scroll-margin** (po dodaniu navbara ustaw `--nav-h`).
-- **Login KV:** `inc/adwise-login.php` (split-screen branded, parallax) — require'owany w functions.php. Brand = adwise. Podmiana pod inny brand → `docs/recipes/login-page/brand-swap.md`.
-- **Hardening:** XML-RPC off, REST users hidden, author-enum block, hide WP version, X-Pingback off (marker `ADWISE_SECURITY_HARDENING`). **Slug logowania (WPS Hide Login) + Limit Login Attempts = pluginy per-deploy, NIE w repo** → `docs/recipes/login-page/workflow.md`.
-
-```bash
-npm install        # raz
-npm run start      # dev + watch
-npm run build      # produkcja
-npm run lint:js    # ESLint (blocks/)
-npm run lint:css   # Stylelint (blocks/**/*.scss)
-```
+| Bloki jako plugin | docs/plugin-mode.md |
+| Akcje runtime (postaw stronę, seed CPT, CF7) | docs/wp-mcp.md |
+| Performance / a11y | docs/optymalizacja.md |
+| Wdrożenie prod | docs/migracja-prod.md |
+| Rebrand login | docs/recipes/login-page/ |
 
 ---
 
 ## Architecture
-
 ```
-blocks/[block-name]/     # Source bloków (per projekt — blueprint startuje pusty)
-  block.json             # Metadata, attributes, supports
-  index.js               # registerBlockType
-  edit.js                # React component (edytor)
-  save.js                # return null (server-rendered)
-  render.php             # SSR — HTML output
-  style.scss             # Style frontend
-  editor.scss            # Style tylko edytor
-  view.js                # Interaktywność frontu (opcjonalny)
-
-build/                   # Output webpacka (NIE edytować, NIE commitować)
-assets/src/index.js      # Fallback entry (pusty)
-assets/css/editor.css    # Style edytora (add_editor_style)
-assets/js/               # Plain JS enqueue'owany wprost (content-length-limit.js)
-assets/fonts/            # Lokalne woff2 (per projekt)
-assets/icons/            # Hardcoded inline SVG per block (NIE user-upload)
-templates/               # FSE page templates
-parts/                   # FSE template parts (header, footer)
-inc/                     # PHP modules (adwise-login.php)
-docs/                    # Workflow (patterns, recipes, guides)
+blocks/[block-name]/  block.json · index.js · edit.js · save.js (null) · render.php · style.scss · editor.scss · view.js?
+build/                # Output (NIE edytować)
+assets/fonts/ icons/ images/
+templates/ parts/     # FSE templates + parts (header, footer)
+patterns/             # WP block patterns (≠ docs/patterns!)
+inc/                  # PHP modules (adwise-login.php, abilities.php…)
+docs/                 # Instrukcje (ten zestaw)
 ```
+Webpack auto-discovers `blocks/*/index.js`+`view.js`; rejestracja: `glob()` w `functions.php` z `build/blocks/*/block.json`. Komendy: `npm run start|build|lint:js|lint:css`.
+
+---
+
+## Header / Footer — template parts (nie PHP, nie pattern)
+Header/footer to **FSE template parts** (`parts/header.html`, `parts/footer.html`) z **block markupem**, NIE PHP (`get_header()`).
+- Navbar/footer = bloki natywne w template part: `<!-- wp:{namespace}/navbar /-->` w `parts/header.html`.
+- Template wskazuje part: `<!-- wp:template-part {"slug":"header","tagName":"header"} /-->`.
+- **Wstawiaj edytując plik `parts/*.html`** (źródło prawdy). Site Editor robi DB override (`wp_template_part`) gubiony w gicie (docs/patterns/editor-gotchas.md §4).
+- **template parts ≠ block patterns.** Navbar idzie do template **partu**, nie jako pattern.
+
+---
+
+## Akcje runtime (postaw stronę, seed CPT, CF7) — WP MCP
+Budowanie (pliki, `register_post_type`, build) NIE wymaga MCP. Żeby Claude **sam** postawił stronę z bloków / seedował CPT / utworzył CF7 / przypiął front page:
+- **Domyślnie: oficjalny WP MCP Adapter** (Abilities API, WP 6.9+) — typed abilities w `inc/abilities.php` (`create-page`, `seed-cpt`…). Setup → **docs/wp-mcp.md**. (Novamira porzucona.)
+- **Fallback:** WP-CLI (`wp post create`, `wp eval-file`) / ręczny snippet (duplicate-check `get_page_by_path` przed `wp_insert_post`).
+- Strony = bloki self-closing `<!-- wp:{namespace}/{block} /-->`; navbar/footer pomijasz (template parts).
 
 ---
 
 ## Block Conventions
 
-### Supports (obowiązkowe w KAŻDYM bloku)
+### Supports (KAŻDY blok)
 ```json
-"supports": {
-  "html": false,
-  "anchor": true,
-  "customClassName": true,
-  "align": ["wide", "full"],
-  "color": false,
-  "spacing": false
-}
+"supports": { "html": false, "anchor": true, "customClassName": true, "align": ["wide","full"], "color": false, "spacing": false }
 ```
-`anchor` i `customClassName` — ZAWSZE `true`.
+Bloki SSR (`save`→`null`) — `anchor` + `className` **jawnie w `attributes`** (inaczej giną po save).
 
-**KRYTYCZNE:** bloki SSR (`save` → `null`) NIE serializują `anchor`/`className` bez jawnej deklaracji w `attributes` — wartości giną po save:
-```json
-"attributes": {
-  "anchor":    { "type": "string" },
-  "className": { "type": "string" }
-}
-```
+### Namespace / prefiksy
+Namespace = folder theme'u (underscores→hyphens). Textdomain = namespace. Prefix PHP z `functions.php`. Prefix CSS = 2–5 liter per blok.
 
-### Namespace i prefiksy
-- **Namespace bloków** = nazwa folderu theme'u (`adwise`).
-- **Textdomain** = namespace (`adwise`).
-- **Prefix PHP** = `adwise` / stałe `ADWISE_` (z `functions.php`).
-- **Prefix CSS** = unikalny 2–5 literowy skrót per blok (z istniejących `.scss`; nie wymyślaj nowego dla istniejącego bloku).
+### Inline vs Sidebar
+Widoczne na stronie (tytuł, opis, obraz, URL buttona) → **inline** (`RichText`/`MediaUpload`/`LinkControl` popover). Niewidoczna konfiguracja (toggle, select, liczba) → **sidebar**. Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
 
-### Inline vs Sidebar — kiedy co
-| Typ pola | Gdzie | Komponent |
-|----------|-------|-----------|
-| Tekst widoczny (tytuł, cena, opis) | **Inline** | `RichText` |
-| Obraz widoczny | **Inline** | `MediaUpload` |
-| URL buttona | **Inline** | `Popover` + `LinkControl` |
-| Toggle/boolean (pokaż/ukryj, wariant) | **Sidebar** | `ToggleControl` |
-| Wybór z listy (CPT, menu, wariant) | **Sidebar** | `SelectControl` |
-| Liczba (kolumny, ilość, delay) | **Sidebar** | `RangeControl` |
-
-**Zasada:** widoczne na stronie → **inline**. Niewidoczna konfiguracja → **sidebar**. Pełne uzasadnienie → `docs/patterns/editor-gotchas.md`.
-
-### Block Type Decision Guide
-| Pytanie | Statyczny | Dynamiczny |
-|---------|-----------|------------|
-| Skąd dane? | Atrybuty block.json | WP_Query / REST |
-| Podgląd? | RichText, MediaUpload | `ServerSideRender` lub `useSelect` |
-| render.php? | Wyświetla `$attributes` | Wykonuje `WP_Query` |
-| view.js? | Tylko animacje/slider | Load more / AJAX |
-
-**Statyczny** — treść wpisuje redaktor (hero, about, pricing). **Dynamiczny** — treść z bazy (grid postów, CPT, archiwa). Szczegóły → `docs/patterns/dynamic-blocks.md`.
+### Repeatable items
+`.map()` w podglądzie, „✕" na hover, „+ Dodaj" pod listą (nie sidebar). Scaffolding → docs/block-template.md.
 
 ### Warianty zamiast duplikacji
-Nowy blok różni się od istniejącego TYLKO kolorystyką/tłem → NIE twórz nowego bloku. Dodaj atrybut `variant` (SelectControl w sidebar) + klasę modifier (`prefix--dark`). Ustaw `color` jawnie na KAŻDYM elemencie tekstowym wariantu — patrz `docs/css-conventions.md`.
+Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jawnie na każdym elemencie tekstowym wariantu).
 
 ---
 
 ## Workflow: design → plan → akceptacja → kod
-
-1. `get_screenshot` → analiza wizualna (szczegóły → `docs/figma-to-block.md`)
-2. `get_design_context` na 1 elemencie → wartości CSS (mobile context bywa odziedziczony — weryfikuj ze screenshotem)
-3. **Pytania do usera — WSZYSTKIE naraz** (lista niżej)
-4. **Plan** — tabela clamp (desktop→mobile), zmiany layout @1024px, atrybuty, struktura. NIE implementuj bez planu.
-5. **Czekaj na akceptację.**
-6. Po akceptacji → checklist z `docs/block-template.md` → implementacja
-7. Build → test edytor (desktop + wąski panel) → test frontend (desktop + mobile)
-
-### Nowy blok — pytania (WSZYSTKIE w jednej wiadomości)
-- Typ danych? (statyczne / dynamiczne WP_Query / external API)
-- Jeśli dynamiczne: skąd? (CPT, taxonomy, endpoint)
-- Interaktywność? (brak / load more / slider / accordion / tabs)
-- Responsywność: kolumny desktop → tablet → mobile?
-- Pola na karcie/elemencie? (image, title, excerpt, link, custom fields)
-- Klikalność? Co jest linkiem?
-- Content full-width (edge-to-edge) czy opakowany (max-width)?
+1. **Czytaj design** wg ścieżki — Figma (docs/figma-to-block.md) lub export (docs/claude-design-export.md) → tokeny do `theme.json`.
+2. **Pytania do usera — wszystkie naraz** (per blok: typ danych, interaktywność, kolumny, pola, klikalność, full-width).
+3. **Plan** — tabela clamp (desktop→mobile), zmiany layout @1024px, atrybuty, struktura. NIE implementuj bez planu.
+4. **Czekaj na akceptację.**
+5. Konwersja/scaffolding (docs/block-template.md + docs/patterns/) → implementacja.
+6. Build → test edytor (desktop + wąski panel) → test front (desktop + mobile).
 
 ---
 
-## Zasady BEZWZGLĘDNE (nie trzeba przypominać)
-- **Plan przed kodem** — ZAWSZE (plan → akceptacja → kod)
-- `editor.scss` ≡ `style.scss` pod względem clamp/breakpointów/box-sizing — ZAWSZE synchronizuj
-- `box-sizing: border-box` na elementach z padding + width — ZAWSZE
-- `max-width: 100%` na elementach ze stałą width — ZAWSZE
-- `anchor` + `className` jawnie w `attributes` — ZAWSZE (bloki SSR)
-- Każdy `MediaUpload` ma przycisk "✕" usuwania (docs/patterns/media-images.md)
-- Sekcje z overlay → `background-image`, nie `<img>` (docs/patterns/backgrounds.md)
-- Clamp na wartościach liczbowych, breakpoint TYLKO na layout
-- Buttony/klikalne → jawny `color` + `-webkit-tap-highlight-color: transparent`
-- Hover na froncie → `@media (hover: hover)`, nie gołe `:hover`
-- Tel/email → `<a href="tel:/mailto:">` z jawnym kolorem
-- Kontenery → bez sztywnego `height`
+## Zasady BEZWZGLĘDNE
+- Plan przed kodem — ZAWSZE · `editor.scss` ≡ `style.scss` (clamp/breakpointy/box-sizing)
+- `box-sizing: border-box` + `max-width: 100%` gdzie trzeba · `anchor`+`className` jawnie (SSR)
+- Każdy `MediaUpload` ma „✕" · Sekcje z overlay → `background-image`, nie `<img>`
+- Clamp na wartościach, breakpoint TYLKO na layout
+- Buttony → jawny `color` + `-webkit-tap-highlight-color: transparent` · Hover front → `@media (hover: hover)`
+- Tel/email → `<a href="tel:/mailto:">` z kolorem · Kontenery bez sztywnego `height`
 - Walidacja formularzy → `position: absolute`, bez layout shift
-- Navbar → top bar static + main `position: sticky` (NIE pure `fixed`, NIE body padding-top)
-- Inline SVG z Figmy → `fill="var(--fill-0,...)"` → `fill="currentColor"`
+- Navbar → `position: sticky` (NIE pure `fixed`, NIE body padding-top)
 - Obrazy user-upload → `object {id,url,alt}` + responsive srcset (NIE do `assets/`)
-- Template parts (`parts/*.html`) → edytuj w pliku, NIE w Site Editor
+- Template parts → edytuj w pliku, NIE w Site Editor
 
 ---
 
-## Token-Optimized Workflow
-- **NIE eksploruj projektu agentem** — struktura bloków identyczna (patrz Architecture).
-- **NIE czytaj ponownie** plików, które edytowałeś w tej sesji.
-- **NIE czytaj ad-hoc `docs/`** dopóki nie pracujesz nad danym tematem.
-- Zadawaj wszystkie pytania naraz, nie jedno po drugim.
+## Token-Optimized
+- NIE ładuj skilli `brainstorming`/`figma-implement-design`/`using-superpowers` — treść jest tu. Skill Figma `figma:figma-use` tylko przed `use_figma` (ścieżka Figma).
+- NIE eksploruj projektu agentem (struktura identyczna). NIE czytaj ad-hoc patterns dopóki nie pracujesz nad tematem.
+- Audyt MD: `claude-md-management:claude-md-improver`.
+
+## Baseline / Dependencies
+Theme jest już sprovisionowany w blueprincie (functions.php glob + anchor-injection + scroll-margin, theme.json, parts, webpack, login KV w inc/). NIE bootstrapuj WP od zera. Plugin path → docs/plugin-mode.md. Deps: `@wordpress/scripts` ^30, `swiper` ^12, `gsap` ^3 (opcjonalnie — default vanilla IO, docs/patterns/animations.md).

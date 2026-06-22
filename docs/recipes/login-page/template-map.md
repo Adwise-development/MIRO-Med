@@ -4,7 +4,7 @@
 
 ## Co to jest
 
-`template/adwise-login.php` (~15KB, dołączony w tym recipe) = **gotowa implementacja** custom login KV pod brand **AdWise**. Jeden plik mu-style (CSS + HTML + JS + SVG inline). To wzorzec — nie buduj od zera, kopiuj `template/adwise-login.php` → `inc/{brand}-login.php` i podmieniaj (patrz `brand-swap.md`).
+`inc/adwise-login.php` (root theme’u — wdrożony w blueprincie) (~15KB, dołączony w tym recipe) = **gotowa implementacja** custom login KV pod brand **AdWise**. Jeden plik mu-style (CSS + HTML + JS + SVG inline). To wzorzec — nie buduj od zera, kopiuj `inc/adwise-login.php` (root theme’u — wdrożony w blueprincie) → `inc/{brand}-login.php` i podmieniaj (patrz `brand-swap.md`).
 
 Registered jako require w `functions.php`:
 ```php
@@ -82,4 +82,4 @@ Mobile `<900px`: panel stacked na górze (`position: relative`, `min-height: 240
 
 - `workflow.md` — generyczny workflow (pluginy WPS Hide Login + Limit Login Attempts, hardening, curl weryfikacja, sandbox workaround)
 - `brand-swap.md` — jak z tego wzorca zrobić login pod inny brand (checklist 7 punktów)
-- `template/adwise-login.php` — sam wzorzec do skopiowania
+- `inc/adwise-login.php` (root theme’u — wdrożony w blueprincie) — sam wzorzec do skopiowania

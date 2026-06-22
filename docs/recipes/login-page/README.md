@@ -11,10 +11,10 @@ Bazuje na wzorcu **AdWise** (`inc/adwise-login.php`): split-screen 50/50, logo +
 | **workflow.md** | Generyczny workflow: pluginy, hardening, weryfikacja curl |
 | **brand-swap.md** | Checklist podmiany wzorca AdWise → nowy brand |
 | **template-map.md** | Mapa wzorca (hooki, linie, CSS vars, decyzje UI) |
-| **template/adwise-login.php** | **Sam wzorzec** (~15KB) — gotowy do skopiowania |
+| **inc/adwise-login.php** | **Sam wzorzec** (~15KB) — gotowy do skopiowania |
 
 ## Źródło wzorca
-Wzorzec jest **dołączony**: `template/adwise-login.php`. Przy nowym projekcie kopiuj go do `inc/{brand}-login.php` w theme'ie i podmień brand (brand-swap.md). Mapa pliku (co gdzie) → `template-map.md`.
+Wzorzec jest **dołączony**: `inc/adwise-login.php` (root theme’u — wdrożony w blueprincie). Przy nowym projekcie kopiuj go do `inc/{brand}-login.php` w theme'ie i podmień brand (brand-swap.md). Mapa pliku (co gdzie) → `template-map.md`.
 
 ## Kiedy stosować
 Każdy nowy projekt produkcyjny MUSI mieć:

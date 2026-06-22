@@ -18,9 +18,11 @@ Skopiuj na nowym projekcie jako `project.md` i wypełnij. To **stan projektu** (
 
 ## 2. Środowisko
 - **Dev:** <!-- LocalWP, ścieżka, URL local -->
+- **Blueprint:** <!-- z jakiego blueprinta LocalWP / co w baseline (WP ver, pluginy) -->
+- **WP MCP:** <!-- Adapter skonfigurowany? transport STDIO/HTTP, App Password — patrz wp-mcp.md -->
 - **Prod:** <!-- domena -->
 - **Hosting / cache:** <!-- np. LiteSpeed + LSCache / Cloudflare -->
-- **PHP:** <!-- wersja na dev / prod -->
+- **PHP / WP:** <!-- wersja na dev / prod (WP 6.9+ dla MCP Adapter) -->
 
 ## 3. Design (Figma)
 - **Link / file key:** <!-- -->

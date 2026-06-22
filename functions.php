@@ -175,6 +175,13 @@ add_action( 'wp_head', function () {
 require_once __DIR__ . '/inc/adwise-login.php';
 
 /* -------------------------------------------------------------------------
+ * WP MCP runtime abilities (Abilities API → mcp-adapter) — inc/abilities.php
+ * Akcje runtime (postaw stronę / seed CPT / CF7 / front page) jako typed
+ * abilities. No-op gdy brak Abilities API (WP < 6.9). Patrz docs/wp-mcp.md.
+ * ---------------------------------------------------------------------- */
+require_once __DIR__ . '/inc/abilities.php';
+
+/* -------------------------------------------------------------------------
  * Security hardening (idempotent — marker ADWISE_SECURITY_HARDENING).
  * Slug logowania (WPS Hide Login) + brute-force (Limit Login Attempts) =
  * pluginy per-deploy, NIE w repo. Patrz docs/recipes/login-page/workflow.md.

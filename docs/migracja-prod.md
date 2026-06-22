@@ -24,7 +24,7 @@ zip -r theme.zip wp-content/themes/{theme} \
 | `wp-content/uploads/` (media) | `.git/`, `.claude/` |
 | `.htaccess` (jeśli custom) | źródła `blocks/*` opcjonalnie (potrzebny tylko `build/`) |
 
-Metoda: SFTP / File Manager hostingu / WP-CLI. (Jeśli używasz MCP/Novamira: `create-upload-link` → `curl PUT` → extract PHP — host-specific.)
+Metoda: SFTP / File Manager hostingu / WP-CLI. (Jeśli masz WP MCP z ability deploy/upload — możesz przez nią; patrz `wp-mcp.md`.)
 
 ---
 

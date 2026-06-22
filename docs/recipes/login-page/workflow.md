@@ -73,7 +73,7 @@ Instalacja, hardening, weryfikacja. Niezależne od brandu (podmiana brandu → b
 ---
 
 ## Sandbox / write-blocked PHP
-Niektóre hostingi/sandboxy blokują zapis plików PHP przez write/edit API. Workaround: runtime PHP `file_put_contents` (np. przez execute-php / WP eval). Duże pliki (>10KB): base64 inline + `base64_decode` po stronie WP.
+Niektóre hostingi/sandboxy blokują zapis plików PHP przez write/edit API. Workaround: runtime PHP `file_put_contents` (przez WP-CLI `wp eval-file`, ability WP MCP, lub ręczny snippet). Duże pliki (>10KB): base64 inline + `base64_decode` po stronie WP.
 
 ## Bezpieczeństwo
 - Slug login trzymaj poza repo publicznym (sekret).
