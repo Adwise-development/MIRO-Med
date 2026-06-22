@@ -1,0 +1,8 @@
+node_modules/
+build/
+.DS_Store
+*.log
+
+# Slug logowania + lokalne sekrety nie trafiają do repo (per-deploy)
+.env
+inc/local-*.php
