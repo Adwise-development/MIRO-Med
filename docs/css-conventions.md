@@ -97,6 +97,35 @@ Zdjęcie jako samodzielny element (galeria, karta) → `<img>` z `object-fit: co
 
 ---
 
+## Fonty — variable weight + `font-display`
+- **Variable font → czytaj `font-variation-settings`, nie tylko `font-weight`.** Efektywna grubość = wartość `'wght' N` z CSS exportu/Figmy. Sam `font-weight: 600` przy variable foncie daje inną (często za ciężką) grubość niż design. Kopiuj dokładnie:
+  ```scss
+  .{prefix}__heading { font-variation-settings: 'wght' 480; } // nie font-weight:500
+  ```
+- **`@font-face` w `theme.json` → ZAWSZE `"fontDisplay": "swap"`.** WP domyślnie generuje `font-display: fallback` → przy wolnym ładowaniu fontu zostaje system-ui i user widzi „zły font" w całym projekcie mimo poprawnego pliku. W KAŻDYM `fontFace`:
+  ```json
+  "fontFace": [ { "fontFamily": "Haskoy", "src": [ "file:./assets/fonts/haskoy.woff2" ], "fontDisplay": "swap" } ]
+  ```
+  Diagnoza: screenshot z `--virtual-time-budget` (font dociąga) = OK, szybki = fallback → brakuje swap.
+
+---
+
+## Popover / tooltip nad obszarem z `overflow: hidden`
+Element popoverowy (tooltip, karta, dropdown) wychodzący poza obszar, który przycina treść przewijaną/pełzającą (`overflow: hidden`) → **osobna warstwa klipująca** tylko zawartość, popover poza nią:
+```scss
+.{prefix}__map        { position: relative; /* BEZ overflow — tooltip dziecko nie przycięte */ }
+.{prefix}__map-clip   { position: absolute; inset: 0; overflow: hidden; border-radius: 16px; } // przycina TYLKO obraz+piny
+.{prefix}__tooltip    { position: absolute; /* dziecko .map, nie .map-clip → pełne */ }
+```
+NIE przenoś popovera do rodzica wyżej (element bywa centrowany na mobile → offset się rozjedzie).
+
+---
+
+## Grep wszystkich wariantów selektora
+Przy ekstrakcji CSS grepuj **wszystkie** warianty bazowego selektora: `.pin`, `.pin:not(.multi)`, `.pin::after`, `.pin.multi`. Pominięcie `:not()`/`::after`/`.modifier` = zgubiony wariant (np. pojedynczy pin = kropla, multi = koło). Jeśli JS musi skalować element animowany hoverem → przekaż wartość przez **CSS var** (`--pk`), NIE nadpisuj całego `transform` inline (inline blokuje transform/hover z CSS).
+
+---
+
 ## Animacja strzałki na buttonach
 Dwa spany: `arrow-1` (widoczny) + `arrow-2` (ukryty). Hover: `arrow-1` wyjeżdża, `arrow-2` wjeżdża. Mobile (@1024px): `arrow-2 display: none` + hover na `arrow-1` wyłączony.
 

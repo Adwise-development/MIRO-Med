@@ -193,5 +193,16 @@ add_filter( 'wpcf7_load_js', function ( $load ) {
 
 ---
 
+## 8. CF7 nie odwzorowuje custom checkboxa / reveal 1:1
+Design często ma „shadcn" checkbox (custom box ze svg) + pole chowane za checkboxem (JS reveal). CF7 renderuje **natywny** checkbox + statyczne pola — nie ma JS reveal ani dowolnego markupu.
+
+**Decyzja (default):** styluj CF7 natywnie (`accent-color` brandu), pola zawsze widoczne (textarea nie chowana). Jeśli klient wymaga 1:1:
+- custom JS na froncie nadpisujący markup CF7 (`wpcf7_form_elements` filter + view.js), **lub**
+- natywny formularz + własny REST submit zamiast CF7 (pełna kontrola markupu/UX, tracisz panel CF7).
+
+Odnotuj uproszczenie w `project.md` (np. „checkbox natywny, nie shadcn — ograniczenie CF7").
+
+---
+
 ## Inne biblioteki formularzy
 Gdy projekt używa innego pluginu (WPForms, Gravity) — zasada ta sama: **statyczny preview w edytorze (NIE SSR), walidacja position:absolute bez layout shift, nadpisz natywne `<br>`/`<p>`/marginesy**. Wybór formularza zawsze w sidebarze (konfiguracja).

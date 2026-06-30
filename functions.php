@@ -53,9 +53,11 @@ add_action( 'enqueue_block_editor_assets', function () {
 	wp_add_inline_script(
 		'adwise-content-length',
 		sprintf(
-			'window.ADWISE=window.ADWISE||{};window.ADWISE.contentLength={heading:%d,text:%d};',
+			// themeUri → edit.js robi ten sam fallback do domyślnych assetów theme co render.php (edytor = front 1:1).
+			'window.ADWISE=window.ADWISE||{};window.ADWISE.contentLength={heading:%d,text:%d};window.ADWISE.themeUri=%s;',
 			(int) ADWISE_CL_HEADING_MULTIPLIER,
-			(int) ADWISE_CL_TEXT_MULTIPLIER
+			(int) ADWISE_CL_TEXT_MULTIPLIER,
+			wp_json_encode( ADWISE_URI )
 		),
 		'before'
 	);

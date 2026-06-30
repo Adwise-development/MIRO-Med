@@ -96,8 +96,14 @@ add_action( 'wp_enqueue_scripts', function () {
 ```
 Vanilla `reveal.js` jest lekki — możesz ładować zawsze; warunkowy enqueue ma sens głównie dla GSAP / cięższych view.js.
 
+## Sygnaturowe animacje — czytaj z CSS exportu, NIE z pamięci
+Animacji „znaczących" z designu (reveal kafli, wipe, photo-swap, staggered) **NIE odtwarzaj z pamięci** ani nie improwizuj generycznym fade-up — czytaj **dokładny CSS z exportu/Figmy** (keyframes, `transform`, `::after` panel, `--d` stagger, easing, duration) i wdrażaj 1:1. Improwizacja = inny efekt niż design.
+
+**JS skalujący element animowany hoverem → przez CSS var, nie inline `transform`.** Jeśli view.js musi skalować pin/kartę zależnie od zoomu, ustaw tylko CSS var (`el.style.setProperty('--pk', 1/zoom)`); `transform` (z `rotate` + `scale(var(--pk))`) i hover zostają w CSS. Inline `style.transform` nadpisuje regułę CSS → blokuje hover/animację.
+
 ## Zasada
 - Domyślnie `reveal` (vanilla IO). GSAP gdy IO nie wystarcza.
 - ZAWSZE `prefers-reduced-motion: reduce` → wyłącz animacje.
 - Stan końcowy reveal: `transform: none` (sticky-safe).
 - Parallax/ambient (np. login KV) → `requestAnimationFrame` + lerp, flag reduce-motion.
+- Sygnaturowe animacje: 1:1 z CSS exportu. JS skalujący hover-element → CSS var, nie inline transform.

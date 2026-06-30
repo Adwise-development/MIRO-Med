@@ -48,6 +48,8 @@ Szkielet nowego bloku. To jest **bare minimum** — patterny (button, media, tł
 ```
 Dodaj `"viewScript": "file:./view.js"` tylko dla bloków interaktywnych.
 
+> ⚠️ **JSON:** w wartościach (np. polski `description`) NIE wstawiaj prostego `"` — zamyka string, webpack build pada. Użyj `„…"` albo escapuj `\"`. Waliduj: `python3 -c "import json,sys; json.load(open(sys.argv[1]))" block.json`.
+
 ---
 
 ## blocks/{BLOCK_NAME}/index.js
@@ -227,14 +229,16 @@ Synchronizuj clamp/breakpointy z `style.scss`. Dodatkowo edytorowe UI (placehold
 5. [ ] `render.php` — SSR z escapowaniem
 6. [ ] `style.scss` — clamp na wartościach, @1024px na layout, box-sizing
 7. [ ] `editor.scss` — IDENTYCZNE clamp/breakpointy jak style.scss
-8. [ ] Każdy `MediaUpload` ma przycisk "✕" (patterns/media-images.md)
+8. [ ] Każdy `MediaUpload` ma przycisk "✕" + trigger = `<button>` (NIE `<img onClick>`, patterns/media-images.md)
 9. [ ] Obrazy → `object{id,url,alt}` + responsive srcset (patterns/media-images.md)
+9b.[ ] Domyślny asset theme → edit.js fallback `window.ADWISE.themeUri` IDENTYCZNY jak render.php (edytor=front)
 10. [ ] Buttony: `max-width: 100%` + `box-sizing` + jawny `color` + tap-highlight
 11. [ ] Arrow animation (jeśli jest): `arrow-2 display:none` + `arrow-1 transform:none` @1024px
 12. [ ] Hover na froncie → `@media (hover: hover)`
 13. [ ] Tel/email → `<a href="tel:/mailto:">` z jawnym kolorem
 14. [ ] Sekcja z overlay → `background-image`, nie `<img>` (patterns/backgrounds.md)
 15. [ ] `view.js` — (opcjonalnie) interaktywność
+15b.[ ] `block.json` waliduje się jako JSON (polski opis bez prostego `"`)
 16. [ ] `npm run build` — zero błędów
 17. [ ] Test edytor (desktop + wąski panel)
 18. [ ] Test frontend (desktop + mobile)

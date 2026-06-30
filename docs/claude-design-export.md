@@ -79,10 +79,22 @@ Na starcie ustal z userem: budujemy stronę (bloki), produkt (wtyczka), czy oba.
 
 ## Ekstrakcja tokenów — tu jest łatwiej niż Figma
 Brak API. Tokeny czytasz **wprost z plików**:
-- `tokens.css` → `:root { --... }` = gotowa lista zmiennych (kolory, fonty, spacing).
+- `tokens.css` / `styles.css` → `:root { --... }` = gotowa lista zmiennych (kolory, fonty, spacing).
 - `STYLEGUIDE.md` → role + HEX + nazwy komponentów + ton copy.
 
 Zmapuj na semantyczne slugi `theme.json` (nie kopiuj nazw 1:1 — patrz `html-to-block.md` §4). Wartości = źródło prawdy w `theme.json`; mapowania zapisz w `project.md`.
+
+### ⚠️ ZASADA STAŁA — liczby ZAWSZE z `styles.css`, NIGDY z prozy
+Kolory, spacing, font-size, clamp, radius, `white-space` — grepuj **wprost z `styles.css`** (`:root` + selektor komponentu). `DESIGN.md`/`STYLEGUIDE.md` = tylko **intencja/role**, NIE liczby — proza w handoffach bywa nieaktualna/przybliżona (np. opis `#ECEEE5`, a realny `styles.css` = `#E6EFEA`). Przed CSS **każdego** komponentu:
+```bash
+grep -n "selektor-komponentu\|--token" styles.css
+```
+- **Full-bleed wordmarki / wielkie napisy:** grepuj dokładny `clamp(...)` + `white-space: nowrap` (zgadnięty clamp → łamanie w 2 linie).
+- **Grep wszystkie warianty selektora** (`:not()`, `::after`, `.modifier`) — patrz `css-conventions.md`. Literalne wartości z exportu bywają z nieukończonych iteracji → weryfikuj UI screenshotem (Chrome headless + crop), nie tylko kodem.
+
+### Fonty z exportu
+- **Variable font:** czytaj `font-variation-settings` z CSS (nie sam `font-weight`) — `css-conventions.md` §Fonty.
+- **`@font-face` w theme.json:** każdy `fontFace` z `"fontDisplay": "swap"` (inaczej fallback system-ui przy wolnym ładowaniu). ttf → konwersja na woff2.
 
 ---
 

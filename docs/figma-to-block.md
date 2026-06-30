@@ -84,6 +84,8 @@ Slugi semantyczne (`primary`, `base`, `accent-blue`) > nazwy kolorów (`purple`,
 
 ### Typografia — reguła
 Figma token (np. `h/1`, `body/m`, `display`) → font-size slug w `theme.json` (`x-small`…`xxxx-large`). Fonty i warianty: `settings.typography.fontFamilies` w theme.json.
+- **Variable font:** w blokach `font-variation-settings: 'wght' N` (dokładna grubość z design_context), NIE sam `font-weight` — efektywna waga = variation.
+- **`@font-face` w theme.json `fontFace[]`:** każdy wpis z `"fontDisplay": "swap"` (WP domyślnie `fallback` → system-ui przy wolnym ładowaniu = „zły font"). Szczegóły → `css-conventions.md` §Fonty.
 
 ### Spacing — reguła
 Figma odstęp (px) → najbliższy spacing slug. Wartości fluid (clamp) liczone osobno (patrz niżej + css-conventions.md).

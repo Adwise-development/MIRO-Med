@@ -133,6 +133,11 @@ Namespace = folder theme'u (underscores→hyphens). Textdomain = namespace. Pref
 ### Inline vs Sidebar
 Widoczne na stronie (tytuł, opis, obraz, URL buttona) → **inline** (`RichText`/`MediaUpload`/`LinkControl` popover). Niewidoczna konfiguracja (toggle, select, liczba) → **sidebar**. Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
 
+### Edytor = front 1:1 — KAŻDY blok (egzekwuj per blok)
+- **Media trigger = prawdziwy `<button>`** (preview w środku, 1 klik) — NIGDY `<img onClick>` (w Gutenbergu = 2 kliki, picker nie startuje → „brak edycji"). Każdy `MediaUpload` ma „✕".
+- **Domyślny asset theme** (fallback w render.php) → IDENTYCZNY fallback w edit.js przez `window.ADWISE.themeUri`; „✕" przywraca domyślny (nie czyści). → docs/patterns/media-images.md.
+- Widoczne treści (tel/email, linki, ceny) → **inline**, nie sidebar.
+
 ### Repeatable items
 `.map()` w podglądzie, „✕" na hover, „+ Dodaj" pod listą (nie sidebar). Scaffolding → docs/block-template.md.
 
@@ -149,12 +154,19 @@ Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jaw
 5. Konwersja/scaffolding (docs/block-template.md + docs/patterns/) → implementacja.
 6. Build → test edytor (desktop + wąski panel) → test front (desktop + mobile).
 
+**Tryb autonomiczny — throughput NIE wypiera rygoru.** Nawet budując wszystkie bloki naraz, PER BLOK: przeczytaj właściwy pattern → przejdź „Checklist nowego bloku" (block-template.md) → diff screenshot vs design + checklista interakcji → dopiero następny blok. Weryfikacja „renderuje + brak błędu PHP" NIE wystarcza.
+
 ---
 
 ## Zasady BEZWZGLĘDNE
 - Plan przed kodem — ZAWSZE · `editor.scss` ≡ `style.scss` (clamp/breakpointy/box-sizing)
 - `box-sizing: border-box` + `max-width: 100%` gdzie trzeba · `anchor`+`className` jawnie (SSR)
-- Każdy `MediaUpload` ma „✕" · Sekcje z overlay → `background-image`, nie `<img>`
+- Każdy `MediaUpload` ma „✕" + trigger `<button>` (NIE `<img onClick>`) · Sekcje z overlay → `background-image`, nie `<img>`
+- Domyślny asset theme → edit.js fallback `window.ADWISE.themeUri` ≡ render.php (edytor=front)
+- Wartości (kolor/spacing/clamp/`white-space`) z `styles.css`/design_context, NIGDY z prozy `DESIGN.md`/`STYLEGUIDE.md`
+- Variable font → `font-variation-settings` (nie sam `font-weight`) · `@font-face` w theme.json → `"fontDisplay": "swap"`
+- CPT z meta przez REST → `supports: [...,'custom-fields']` · `block.json` bez prostego `"` (waliduj JSON)
+- Sygnaturowe animacje → 1:1 z CSS exportu (NIE z pamięci)
 - Clamp na wartościach, breakpoint TYLKO na layout
 - Buttony → jawny `color` + `-webkit-tap-highlight-color: transparent` · Hover front → `@media (hover: hover)`
 - Tel/email → `<a href="tel:/mailto:">` z kolorem · Kontenery bez sztywnego `height`

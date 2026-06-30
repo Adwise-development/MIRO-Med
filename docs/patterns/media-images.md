@@ -110,9 +110,11 @@ Mobile: zachowaj `aspect-ratio` z desktopu (zdjęcia różnych wysokości — ni
 
 ---
 
-## Media Remove Button — KAŻDY MediaUpload
+## Media trigger = `<button>`, NIGDY klikalny `<img onClick>` — KAŻDY MediaUpload
 
-Każdy `MediaUpload` (ikona, zdjęcie, logo, tło) MUSI mieć przycisk "✕". Styl jednolity w projekcie.
+> ⚠️ **Klik w `<img onClick={open}>` jest ZAWODNY w Gutenbergu.** Pierwszy klik w obrazek tylko **zaznacza blok** — picker się nie otwiera → user „nie ma edycji". Sprawdzone wielokrotnie. **Reguła:** trigger media to zawsze prawdziwy `<button>` (preview ZAWSZE wewnątrz buttona, 1 klik) — nigdy goły `<img>` z `onClick`.
+
+Każdy `MediaUpload` (ikona, zdjęcie, logo, tło) MUSI mieć: trigger-`<button>` + preview + przycisk „✕". Styl jednolity w projekcie.
 
 **edit.js — wzorzec (ikona w repeatable item):**
 ```js
@@ -123,10 +125,12 @@ Każdy `MediaUpload` (ikona, zdjęcie, logo, tło) MUSI mieć przycisk "✕". St
 			allowedTypes={ [ 'image' ] }
 			value={ item.icon?.id }
 			render={ ( { open } ) => (
-				item.icon?.url
-					? <img src={ item.icon.url } alt={ item.icon.alt || '' }
-						className="{PREFIX}__icon" onClick={ open } role="button" tabIndex={ 0 } />
-					: <button type="button" className="{PREFIX}__icon-placeholder" onClick={ open }>+</button>
+				// ZAWSZE <button> (1 klik), preview w środku — NIE <img onClick>
+				<button type="button" className="{PREFIX}__icon-btn" onClick={ open }>
+					{ ( item.icon?.url || iconFallback )
+						? <img src={ item.icon?.url || iconFallback } alt={ item.icon?.alt || '' } className="{PREFIX}__icon" />
+						: <span className="{PREFIX}__icon-placeholder">+</span> }
+				</button>
 			) }
 		/>
 	</MediaUploadCheck>
@@ -137,6 +141,15 @@ Każdy `MediaUpload` (ikona, zdjęcie, logo, tło) MUSI mieć przycisk "✕". St
 </div>
 ```
 Dla atrybutu bloku (nie repeatable): `onClick={ () => setAttributes( { image: {} } ) }`.
+
+**`.{PREFIX}__icon-btn` (editor.scss) = button-reset:** `background:none; border:none; padding:0; cursor:pointer; display:block;` (+ jawny `color` jeśli SVG `currentColor`).
+
+### Domyślny asset theme → edytor = front 1:1 (fallback przez `themeUri`)
+Jeśli render.php ma fallback do domyślnego assetu theme (`ADWISE_URI . '/assets/...'`), edit.js MUSI mieć **identyczny** fallback — inaczej edytor pokazuje placeholder, front obrazek (łamie zasadę edytor=front). Baseline lokalizuje ścieżkę theme w `functions.php` (`window.ADWISE.themeUri`):
+```js
+const iconFallback = item.icon?.url || `${ window.ADWISE?.themeUri ?? '' }/assets/icons/{block}/type-default.svg`;
+```
+Wtedy `✕` **przywraca domyślny asset** (nie czyści do pustego) — `onClick={ () => updateItem( i, 'icon', {} ) }` + render/edit pokazują fallback. Dla pól bez domyślnego assetu `✕` czyści normalnie do `{}`.
 
 **editor.scss — jednolity styl ✕:**
 ```scss

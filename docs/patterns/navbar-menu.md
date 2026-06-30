@@ -167,6 +167,13 @@ $wrapper = get_block_wrapper_attributes( [ 'class' => 'wp-block-{namespace}-navb
 
 `wp_nav_menu` z `'menu' => $menu_id` renderuje dokładnie to menu (te same linki co preview).
 
+**Gotcha — custom `Walker_Nav_Menu` musi emitować `<li>` + `start_lvl`.** Domyślny `wp_nav_menu` (wyżej) jest bezpieczny — stylujesz po klasach `.sub-menu` / `.menu-item-has-children`. Jeśli **musisz** mieć custom markup (własny walker), subklasa MUSI nadpisać komplet, inaczej dropdowny się nie chowają (wszystko na wierzchu):
+- `start_el` → emituj `<li class="{$item->classes}">` + `<a>` (nie sam `<a>` — CSS/JS nie ma za co złapać `menu-item-has-children`).
+- `end_el` → `</li>`.
+- `start_lvl`/`end_lvl` → własna klasa podmenu `<ul class="nav__sub">` (bez nadpisania WP daje domyślny `sub-menu`).
+
+Preferuj domyślny `wp_nav_menu` + stylowanie po klasach — mniej pułapek.
+
 ---
 
 ## 4. CSS — sticky navbar (NIE pure fixed)

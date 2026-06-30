@@ -170,6 +170,7 @@ Odczytaj z `theme.json` → `settings.typography.fontFamilies`. HTML używa nowe
   font-display: swap;
 }
 ```
+> ⚠️ **`@font-face` przez theme.json `fontFace[]` → DODAJ `"fontDisplay": "swap"`** w każdym wpisie. WP domyślnie generuje `font-display: fallback` → user widzi system-ui („zły font") przy wolnym ładowaniu. Variable font → blokom dawaj `font-variation-settings: 'wght' N` (dokładna grubość z `styles.css`), nie sam `font-weight`. Szczegóły → `css-conventions.md` §Fonty.
 
 ### Spacing
 

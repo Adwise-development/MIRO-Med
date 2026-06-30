@@ -98,3 +98,12 @@ useEffect( () => {
 }, [ dep ] );
 ```
 Dotyczy navbar (menu-items), forms (lista CF7), każdego dynamic picker.
+
+## 11. Media przez klik w `<img>` = 2 kliki (picker się nie otwiera)
+`<img onClick={open}>` jako trigger `MediaUpload` jest zawodny: 1. klik tylko zaznacza blok, picker nie startuje → user „nie widzi edycji". **Reguła:** trigger media = prawdziwy `<button>` (preview w środku, 1 klik), NIGDY goły `<img>`/`<div>` z `onClick`. Pełny wzorzec → `patterns/media-images.md`.
+
+## 12. Prosty `"` w wartości block.json zrywa JSON → webpack build error
+Polski opis bloku z ASCII `"` (np. `"description": "„Aktualne działki""`) zamyka string przedwcześnie → cały build pada. **Reguła:** w `block.json` (i każdym JSON) w wartościach NIE używaj prostego `"` — użyj `„…"` (cudzysłowy drukarskie) albo escapuj `\"`. Waliduj przed buildem:
+```bash
+python3 -c "import json,sys; json.load(open(sys.argv[1]))" blocks/{BLOCK_NAME}/block.json
+```

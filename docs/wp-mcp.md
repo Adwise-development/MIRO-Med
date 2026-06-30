@@ -94,7 +94,7 @@ Analogicznie: `{ns}/seed-cpt`, `{ns}/create-cf7-form`, `{ns}/set-front-page`, `{
 | Akcja | Jak |
 |-------|-----|
 | Strona z bloków | ability `create-page` (`wp_insert_post`, content = markup), duplicate-check `get_page_by_path` |
-| Wpisy CPT (seed) | ability `seed-cpt` (CPT z `show_in_rest:true` jeśli ma być w edytorze) |
+| Wpisy CPT (seed) | ability `seed-cpt` (CPT z `show_in_rest:true`; **meta przez REST → CPT MUSI mieć `'custom-fields'` w supports**, inaczej meta cicho ignorowana — patterns/dynamic-blocks.md) |
 | **Rejestracja CPT** | KOD `functions.php` (`register_post_type`) — NIE MCP |
 | Media | ability upload / lub WP-CLI `wp media import` |
 | Rekord formularza CF7 | ability własna (API CF7) **lub** ręcznie w Kontakt → Formularze |
