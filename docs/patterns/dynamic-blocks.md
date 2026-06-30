@@ -23,12 +23,12 @@ $is_editor = defined( 'REST_REQUEST' ) && REST_REQUEST;
 ## CPT z meta przez REST → `custom-fields` w supports (KRYTYCZNE)
 > Gdy meta CPT jest **seedowana lub edytowana przez REST** (`register_post_meta` z `show_in_rest => true`): to NIE wystarcza. CPT MUSI mieć `'custom-fields'` w `supports`, inaczej schema `meta` w REST jest pusty → POST/PATCH meta **cicho ignorowany** (`featured_media` zapisuje się, meta nie). Objaw: `meta = null` w REST mimo poprawnej rejestracji.
 ```php
-register_post_type( 'osada', [
+register_post_type( '{cpt}', [
 	// ...
 	'show_in_rest' => true,
 	'supports'     => [ 'title', 'editor', 'thumbnail', 'custom-fields' ], // ← 'custom-fields' wymagane dla meta przez REST
 ] );
-register_post_meta( 'osada', 'priceFrom', [ 'type' => 'number', 'single' => true, 'show_in_rest' => true ] );
+register_post_meta( '{cpt}', 'price', [ 'type' => 'number', 'single' => true, 'show_in_rest' => true ] );
 ```
 
 ---

@@ -104,7 +104,7 @@ Zdjęcie jako samodzielny element (galeria, karta) → `<img>` z `object-fit: co
   ```
 - **`@font-face` w `theme.json` → ZAWSZE `"fontDisplay": "swap"`.** WP domyślnie generuje `font-display: fallback` → przy wolnym ładowaniu fontu zostaje system-ui i user widzi „zły font" w całym projekcie mimo poprawnego pliku. W KAŻDYM `fontFace`:
   ```json
-  "fontFace": [ { "fontFamily": "Haskoy", "src": [ "file:./assets/fonts/haskoy.woff2" ], "fontDisplay": "swap" } ]
+  "fontFace": [ { "fontFamily": "Inter", "src": [ "file:./assets/fonts/inter.woff2" ], "fontDisplay": "swap" } ]
   ```
   Diagnoza: screenshot z `--virtual-time-budget` (font dociąga) = OK, szybki = fallback → brakuje swap.
 
