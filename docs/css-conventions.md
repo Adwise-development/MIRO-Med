@@ -79,8 +79,8 @@ NIE ustawiaj `height` na kontenerach flex (navbar inner, sekcje). Niech content 
 
 ---
 
-## Editor SCSS ≡ Frontend SCSS
-`editor.scss` MUSI zachowywać się identycznie jak `style.scss`: wszystkie `clamp()`, `@media`, `box-sizing` — kopiuj. Edytor zmienia szerokość panelu → blok musi reagować jak na froncie. Testuj responsywność też w edytorze (wąski panel ~500px).
+## Editor SCSS = chrome, nie kopia style.scss
+`style.scss` (block.json `style`) ładuje się **też w iframe edytora** (WP 6.3+), więc clamp/`@media`/box-sizing działają w edytorze same z siebie — NIE kopiuj ich do `editor.scss`. `editor.scss` (`editorStyle`) trzymaj tylko na chrome edytora: dashed bordery pickerów, placeholdery, ✕, drobne korekty. Duplikacja layoutu = konflikt specyficzności + podwójne utrzymanie (patterns/editor-gotchas.md §9). Responsywność testuj w wąskim panelu (~500px) — ale to `style.scss` na nią odpowiada.
 
 ---
 

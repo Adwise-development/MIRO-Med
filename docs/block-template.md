@@ -228,7 +228,7 @@ Synchronizuj clamp/breakpointy z `style.scss`. Dodatkowo edytorowe UI (placehold
 4. [ ] `save.js` — `return null`
 5. [ ] `render.php` — SSR z escapowaniem
 6. [ ] `style.scss` — clamp na wartościach, @1024px na layout, box-sizing
-7. [ ] `editor.scss` — IDENTYCZNE clamp/breakpointy jak style.scss
+7. [ ] `editor.scss` — TYLKO chrome edytora (dashed bordery, placeholdery, ✕); layout dziedziczy ze style.scss (ładowany w iframe — NIE kopiuj clamp)
 8. [ ] Każdy `MediaUpload` ma przycisk "✕" + trigger = `<button>` (NIE `<img onClick>`, patterns/media-images.md)
 9. [ ] Obrazy → `object{id,url,alt}` + responsive srcset (patterns/media-images.md)
 9b.[ ] Domyślny asset theme → edit.js fallback `window.ADWISE.themeUri` IDENTYCZNY jak render.php (edytor=front)

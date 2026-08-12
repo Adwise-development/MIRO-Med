@@ -7,7 +7,7 @@ Reference (tryb **ad-hoc**): czytaj przy pracy nad wydajnością, Core Web Vital
 - Warunkowe ładowanie assetów (CF7 `has_block`, reveal/GSAP lazy) → `patterns/forms.md`, `patterns/animations.md`
 - `prefers-reduced-motion`, reveal sticky-safe → `patterns/animations.md`
 - SVG sanitizer + mime → `patterns/media-images.md`
-- clamp / box-sizing / editor.scss=style.scss → `css-conventions.md`
+- clamp / box-sizing / editor.scss (chrome-only, layout ze style.scss w iframe) → `css-conventions.md`
 - Emisja tokenów (plugin) → `plugin-mode.md`
 
 Poniżej rzeczy, których w patternach nie ma.

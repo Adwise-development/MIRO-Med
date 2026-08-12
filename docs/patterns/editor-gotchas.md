@@ -5,22 +5,23 @@ Pułapki edytora Gutenberga, które najczęściej psują bloki. Czytaj gdy „co
 ---
 
 ## 1. Sidebar vs inline — anti-patterny
-Konwencja (CLAUDE.md): **WSZYSTKIE kontrolki inline w podglądzie bloku; sidebar TYLKO warianty** (atrybut `variant`). Mapa typ pola → komponent:
+Konwencja (CLAUDE.md, jedno źródło prawdy): **widzisz efekt na karcie → inline; nie widzisz → sidebar.** Mapa typ pola → miejsce:
 
-| Pole | Komponent (inline) |
+| Pole | Miejsce · komponent |
 |------|--------------------|
-| Tekst widoczny | `RichText` |
-| Obraz / ikona | `MediaUpload` (trigger `<button>`) |
-| URL | popover + `LinkControl` |
-| Wybór z listy (menu, formularz CF7, post-type) | `SelectControl` editor-only w podglądzie: picker gdy pusto, preview + ✕ reset gdy wybrane (wzorce: navbar-menu.md, forms.md) |
-| Boolean / liczba (konfiguracja) | `ToggleControl`/`RangeControl` editor-only w podglądzie (ostyluj w editor.scss, np. dashed border) |
-| Wariant kolorystyczny bloku | **sidebar** (`variant`) |
+| Tekst widoczny (tytuł, opis, cena) | **inline** · `RichText` |
+| Obraz / ikona | **inline** · `MediaUpload` (trigger `<button>`) |
+| URL | **inline** · popover + `LinkControl` |
+| Wybór z podglądem na kanwie (menu, formularz CF7, post-type) | **inline** editor-only · `SelectControl` (picker gdy pusto, preview + ✕ gdy wybrane — navbar-menu.md, forms.md) |
+| Konfiguracja bez podglądu (delay ms, liczba kolumn/slajdów, toggle loop) | **sidebar** · `RangeControl`/`ToggleControl` |
+| Wariant bloku | **sidebar** · `variant` |
 
 Najczęstsze błędy:
 - **Tekst widoczny na karcie w sidebarze** (tytuł, cena, opis) → ŹLE. Redaktor ma edytować to, co widzi → RichText inline.
 - **URL buttona w sidebarze** → ŹLE. Inline popover + LinkControl (patterns/buttons-links.md).
-- **Konfiguracja (select/toggle/liczba) w sidebarze** → ŹLE. Editor-only kontrolka w podglądzie.
+- **Wybór z sensownym podglądem (menu/formularz) w sidebarze** → ŹLE. Picker inline, preview na kanwie.
 - **„+ Dodaj” w sidebarze** → ŹLE. Pod listą w podglądzie.
+- **Odwrotnie:** czysta konfiguracja bez podglądu (delay, kolumny) wciśnięta inline „na siłę" → też ŹLE. To należy do sidebara.
 
 ## 2. Context-aware enqueue (CPT meta panel)
 Panel meta w sidebarze ładuj TYLKO dla właściwego post_type, nie globalnie:
@@ -94,8 +95,9 @@ Bloki SSR (`save → null`) NIE serializują `anchor`/`className` bez jawnej dek
 "anchor": { "type": "string" }, "className": { "type": "string" }
 ```
 
-## 9. editor.scss ≠ style.scss
-Najczęstszy „blok wygląda inaczej w edytorze”: editor.scss nie ma tych samych clamp/breakpointów. Synchronizuj 1:1 (css-conventions.md). Edytor zmienia szerokość panelu (~500px) — testuj responsywność w edytorze.
+## 9. editor.scss = chrome edytora, NIE kopia style.scss
+`style.scss` (w `block.json` jako `style`) WP ładuje **też w iframe edytora** (WP 6.3+) — więc layout, clamp i breakpointy działają w edytorze bez kopiowania. `editor.scss` (`editorStyle`) trzymaj TYLKO na chrome edytora: dashed bordery pickerów, placeholdery, przycisk ✕, korekty gdy edytor renderuje inaczej niż front. **Nie duplikuj clampów** — duplikat = konflikt specyficzności i podwójne utrzymanie.
+Gdy blok naprawdę wygląda inaczej w edytorze, przyczyna zwykle NIE jest w editor.scss: constrained szerokość panelu (~500px — testuj wąski), brak `align` w podglądzie, albo inny markup edit.js vs render.php.
 
 ## 10. setState po unmount (apiFetch w edit.js)
 Fetch w `useEffect` bez cleanup → `setState` po unmount (warning, wyciek). Zawsze flag `cancelled`:

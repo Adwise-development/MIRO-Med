@@ -115,8 +115,12 @@ Bloki SSR (`save`→`null`) — `anchor` + `className` **jawnie w `attributes`**
 ### Namespace / prefiksy
 Namespace = folder theme'u (underscores→hyphens). Textdomain = namespace. Prefix PHP z `functions.php`. Prefix CSS = 2–5 liter per blok.
 
-### Inline vs Sidebar
-WSZYSTKIE kontrolki → **inline** w podglądzie bloku (`RichText`/`MediaUpload`/`LinkControl` popover; konfiguracja typu select/toggle → editor-only kontrolka w podglądzie). **Sidebar TYLKO warianty bloku** (atrybut `variant`). Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
+### Inline vs Sidebar (jedno źródło prawdy)
+- **Widoczna na froncie treść** (tekst, obraz, URL, tel, cena) → **inline** ZAWSZE (`RichText`/`MediaUpload`/`LinkControl` popover). Nigdy w sidebarze.
+- **Wybór z sensownym podglądem na kanwie** (menu, formularz CF7, post-type) → **inline** editor-only (picker gdy pusto, preview + ✕ gdy wybrane).
+- **Czysta konfiguracja bez podglądu** (delay ms, liczba kolumn/slajdów, toggle loop) + **warianty** (`variant`) → **sidebar** (`InspectorControls`).
+
+Test: „czy redaktor widzi efekt tej wartości na karcie?" — tak → inline; nie → sidebar. Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
 
 ### Edytor = front 1:1 — KAŻDY blok (egzekwuj per blok)
 - **Media trigger = prawdziwy `<button>`** (preview w środku, 1 klik) — NIGDY `<img onClick>` (w Gutenbergu = 2 kliki, picker nie startuje → „brak edycji"). Każdy `MediaUpload` ma „✕".
@@ -144,7 +148,7 @@ Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jaw
 ---
 
 ## Zasady BEZWZGLĘDNE
-- Plan przed kodem — ZAWSZE · `editor.scss` ≡ `style.scss` (clamp/breakpointy/box-sizing)
+- Plan przed kodem — ZAWSZE · `editor.scss` = TYLKO chrome edytora; layout dziedziczy ze `style.scss` (ładowany też w iframe edytora — NIE kopiuj clamp/breakpointów)
 - `box-sizing: border-box` + `max-width: 100%` gdzie trzeba · `anchor`+`className` jawnie (SSR)
 - Każdy `MediaUpload` ma „✕" + trigger `<button>` (NIE `<img onClick>`) · Sekcje z overlay → `background-image`, nie `<img>`
 - Domyślny asset theme → edit.js fallback `window.ADWISE.themeUri` ≡ render.php (edytor=front)
