@@ -18,11 +18,11 @@ Drugie częste źródło bugów. Formularz renderowany na froncie shortcodem CF7
 
 ## 2. edit.js — lista formularzy + statyczny preview
 
-**KLUCZOWE:** NIE używaj `ServerSideRender` dla CF7 — renderuje cały blok w bloku, psuje layout, ładuje skrypty CF7 w edytorze. Zamiast tego: `SelectControl` (wybór formularza, sidebar) + statyczny mock pól.
+**KLUCZOWE:** NIE używaj `ServerSideRender` dla CF7 — renderuje cały blok w bloku, psuje layout, ładuje skrypty CF7 w edytorze. Zamiast tego: `SelectControl` (wybór formularza, **inline w podglądzie bloku** — editor-only) + statyczny mock pól. Sidebar TYLKO dla wariantów bloku.
 
 ```js
-import { InspectorControls, useBlockProps, RichText } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, Spinner } from '@wordpress/components';
+import { useBlockProps, RichText } from '@wordpress/block-editor';
+import { SelectControl, Spinner } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 
@@ -44,41 +44,39 @@ export default function Edit( { attributes, setAttributes } ) {
 	}, [] );
 
 	return (
-		<>
-			<InspectorControls>
-				<PanelBody title="Formularz">
+		<section { ...blockProps }>
+			<div className="{PREFIX}__inner">
+				<RichText tagName="h2" className="{PREFIX}__heading"
+					value={ heading }
+					onChange={ ( val ) => setAttributes( { heading: val } ) }
+					allowedFormats={ [] } />
+
+				{/* Wybór/usunięcie formularza — inline, editor-only (opcja 0 = brak) */}
+				<div className="{PREFIX}__form-picker">
 					<SelectControl
-						label="Wybierz formularz CF7"
+						label="Formularz CF7"
 						value={ cf7FormId }
-						options={ [ { value: 0, label: '— wybierz —' }, ...forms ] }
+						options={ [ { value: 0, label: '— brak formularza —' }, ...forms ] }
 						onChange={ ( val ) => setAttributes( { cf7FormId: parseInt( val, 10 ) } ) }
+						__nextHasNoMarginBottom
 					/>
-				</PanelBody>
-			</InspectorControls>
-
-			<section { ...blockProps }>
-				<div className="{PREFIX}__inner">
-					<RichText tagName="h2" className="{PREFIX}__heading"
-						value={ heading }
-						onChange={ ( val ) => setAttributes( { heading: val } ) }
-						allowedFormats={ [] } />
-
-					{/* Statyczny mock — imituje pola, NIE renderuje CF7 */}
-					<div className="{PREFIX}__form-mock" aria-hidden="true">
-						<div className="{PREFIX}__field-mock" />
-						<div className="{PREFIX}__field-mock" />
-						<div className="{PREFIX}__field-mock {PREFIX}__field-mock--area" />
-						<div className="{PREFIX}__submit-mock">{ heading ? 'Wyślij' : '' }</div>
-					</div>
-					{ ! cf7FormId && <p className="{PREFIX}__hint">Wybierz formularz w panelu bocznym →</p> }
 				</div>
-			</section>
-		</>
+
+				{/* Statyczny mock — imituje pola, NIE renderuje CF7 */}
+				<div className="{PREFIX}__form-mock" aria-hidden="true">
+					<div className="{PREFIX}__field-mock" />
+					<div className="{PREFIX}__field-mock" />
+					<div className="{PREFIX}__field-mock {PREFIX}__field-mock--area" />
+					<div className="{PREFIX}__submit-mock">{ heading ? 'Wyślij' : '' }</div>
+				</div>
+				{ ! cf7FormId && <p className="{PREFIX}__hint">Brak formularza — front pokaże tylko nagłówek.</p> }
+			</div>
+		</section>
 	);
 }
 ```
 
-`cf7FormId` to wybór z listy (konfiguracja, niewidoczny na karcie) → **sidebar** to poprawne miejsce.
+`cf7FormId` wybierany **inline w podglądzie bloku** (kontrolka editor-only w karcie, ostyluj w `editor.scss` np. dashed border). Sidebar TYLKO dla wariantów bloku — NIE dla konfiguracji formularza. Opcja `0` („— brak formularza —") = usunięcie formularza z sekcji.
 
 **Endpoint:** `/contact-form-7/v1/contact-forms` to oficjalny REST CF7 (zawsze dostępny gdy CF7 aktywny). Alternatywa `/wp/v2/contact-forms` działa tylko jeśli CPT formularzy ma `show_in_rest` — nie polegaj na niej. Stąd `.catch()` + guard `data.items || data`.
 
@@ -205,4 +203,4 @@ Odnotuj uproszczenie w `project.md` (np. „checkbox natywny, nie shadcn — ogr
 ---
 
 ## Inne biblioteki formularzy
-Gdy projekt używa innego pluginu (WPForms, Gravity) — zasada ta sama: **statyczny preview w edytorze (NIE SSR), walidacja position:absolute bez layout shift, nadpisz natywne `<br>`/`<p>`/marginesy**. Wybór formularza zawsze w sidebarze (konfiguracja).
+Gdy projekt używa innego pluginu (WPForms, Gravity) — zasada ta sama: **statyczny preview w edytorze (NIE SSR), walidacja position:absolute bez layout shift, nadpisz natywne `<br>`/`<p>`/marginesy**. Wybór formularza zawsze inline w podglądzie (editor-only); sidebar tylko warianty bloku.

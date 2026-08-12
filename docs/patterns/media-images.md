@@ -215,6 +215,29 @@ Inline SVG z Figmy (hardcoded) → `fill="currentColor"`.
 
 ---
 
+## Pas obrazu (`adwise-img-band`) — utility, nie blok
+
+Szeroki kadr edge-to-edge między sekcjami (Figma: np. 1440×540) robimy **natywnym `core/image`**
+z klasą w „Dodatkowe klasy CSS", nie osobnym blokiem. CSS + parallax siedzą globalnie:
+inline `<style>` w `wp_head` (`functions.php`) + `assets/js/img-band.js`.
+**Implementacja referencyjna: projekt burdzig** (`functions.php` + `assets/js/img-band.js`) —
+skopiuj przy pierwszym użyciu; blueprint baseline jej nie zawiera.
+
+| Klasa | Efekt |
+|-------|-------|
+| `adwise-img-band` | `height: 540px` desktop / **`37.5vw` ≤1024** (proporcja z Figmy, np. 2,67:1), `object-fit: cover`, `overflow:hidden` na `figure` |
+| `adwise-img-band no-parallax` | statyczny cover — dla kadrów komponowanych 1:1 (kolaże), gdzie overscan ucina boki |
+
+Działa też na `core/post-featured-image` (wzorce singli CPT).
+
+**Gotchas:**
+- Specyficzność selektora musi być **0,2,2** (`figure.wp-block-image.adwise-img-band img`) — core WP ma `height:auto` przy 0,1,1 i wygrywa kolejnością (objaw: wysokość = `width/aspect` zamiast zadanej).
+- Parallax = JS dodaje klasę `.has-parallax` (obraz wyższy o TRAVEL px + `translateY` na scrollu). **Wartość TRAVEL w JS musi zgadzać się z `height: calc(100% + Npx)` w CSS.**
+- **≤1024 parallax wyłączony** (guard `matchMedia` w `img-band.js` + reset `has-parallax img{height:100%}`) — przy niskim pasie overscan zjadałby cały kadr.
+- Skrypt enqueue'owany warunkowo: tylko gdy `post_content` zawiera `adwise-img-band`.
+
+---
+
 ## Inline SVG w render.php — gotcha
 `echo` inline SVG bez przejścia przez `wp_kses_post()` (które wycina `<svg>`/`<path>`):
 ```php

@@ -6,41 +6,15 @@ Wartości specyficzne (nazwa, tokeny, prefiksy) odczytuj z `style.css` / `theme.
 
 ---
 
-## ⚡ FIRST-RUN — zrób PRZED wszystkim (raz, po wgraniu z GitHuba)
+## ⚡ FIRST-RUN — świeży klon? Wykonaj docs/first-run.md PRZED wszystkim
 
-1. **Wybór ścieżki — zapytaj usera:** „Budujemy z **Figmy** czy z **Claude Design (export)**?"
-2. **Prune — usuń pliki nieużywanej ścieżki:**
-   - **Figma** → usuń `docs/claude-design-export.md` + `docs/html-to-block.md`
-   - **Claude Design** → usuń `docs/figma-to-block.md`
-3. **Wprowadzenie** — przedstaw plan i kolejność (niżej).
-4. **Preflight** — wykryj tooling, potwierdź pluginy (niżej).
-5. **Kickoff** — zadaj pytania (wszystkie naraz, niżej), utwórz `project.md` z `docs/project-template.md`.
-6. **Plan → akceptacja** przed kodem.
-7. **Aktywacja theme** — zaproponuj `wp theme activate adwise` (WP-CLI lub WP MCP) → **zapytaj i czekaj na potwierdzenie**.
+Świeży klon z GitHuba (brak `project.md`) → przeczytaj i wykonaj **`docs/first-run.md`**: wybór ścieżki (Figma / Claude Design), prune doków nieużywanej ścieżki, wprowadzenie, preflight, kickoff (`project.md` z szablonu), plan → akceptacja, aktywacja theme.
+
+Po ukończeniu first-run **przepisz tę sekcję** na `## Stan projektu` (wzór na końcu docs/first-run.md) — kolejne sesje nie czytają wtedy martwej procedury.
 
 **Login KV już wdrożony** (`inc/adwise-login.php`) — NIE odbudowuj; rebrand pod inny brand tylko przez `docs/recipes/login-page/brand-swap.md`.
 
-### Wprowadzenie (mów userowi na starcie)
-> Plan: 1) wybór ścieżki (Figma / Claude Design) + sprzątnięcie zbędnych plików, 2) preflight (WP MCP / Figma MCP / WP-CLI / pluginy), 3) tokeny → `theme.json`, 4) bloki sekcja po sekcji (plan → akceptacja → kod), 5) strony (WP MCP / WP-CLI), 6) build + test (edytor + front), 7) aktywacja theme. Lecę?
-
-### Preflight — sprawdź, potwierdź z userem (✓/✗)
-- **WP MCP Adapter** (akcje runtime) — wykryj tool MCP `wordpress` / `mcp-adapter-discover-abilities`. ✗ → fallback WP-CLI / ręczny snippet (`docs/wp-mcp.md`).
-- **Figma MCP** (`figma:*` / `use_figma`) — TYLKO ścieżka Figma. ✗ → user dostarcza screeny/wartości ręcznie.
-- **WP-CLI** (`wp --version`) + **Node/npm** (`npm -v`).
-- **Skille Claude:** `claude-md-management`, `time-tracker`, `context7` (+ `figma` dla ścieżki Figma).
-- **Pluginy WP** (wg zakresu): CF7 (formularz), LiteSpeed (cache → optymalizacja), WPS Hide Login + Limit Login Attempts (login), SVG support — **potwierdź które masz**.
-→ Wypisz tabelę braków + co znaczą (Claude działa sam vs dowozi snippet), **czekaj na potwierdzenie**.
-
-### Kickoff — pytania (wszystkie w jednej wiadomości)
-1. **Theme czy plugin?** (plugin → `docs/plugin-mode.md`)
-2. **Nazwa + namespace + prefix PHP** (namespace = folder theme'u/plugin).
-3. **Źródło designu** — Figma link / file key **lub** ścieżka folderu exportu Claude Design. Budujemy **site (bloki) / produkt-wtyczkę / oba**?
-4. **Zakres** — single landing / multi-page? ile stron i szablonów?
-5. **CPT / taxonomie?** (`docs/patterns/dynamic-blocks.md`)
-6. **Custom funkcje** — CF7 / slider / grid dynamiczny / inne integracje?
-7. **Środowisko** — LocalWP z blueprinta + domena prod + hosting/cache (LiteSpeed?) + **WP MCP Adapter** skonfigurowany (WP 6.9+, `mcp-adapter`, App Password)?
-
-`project.md` = **utrzymywany plik konfiguracyjny** (env/blueprint/WP MCP/tokeny/bloki/decyzje) — twórz na starcie, aktualizuj po zmianach. `.mcp.json` = config połączenia MCP (`docs/wp-mcp.md`). Oba w `.gitignore` — per-projekt/sekrety (App Password), NIE commituj do blueprintu.
+`project.md` (stan bieżący) i `.mcp.json` (połączenie MCP, App Password) są w `.gitignore` — per-projekt/sekrety, NIE commituj do blueprintu.
 
 ---
 
@@ -48,7 +22,8 @@ Wartości specyficzne (nazwa, tokeny, prefiksy) odczytuj z `style.css` / `theme.
 
 | Plik | Zawartość | Tryb |
 |------|-----------|------|
-| **CLAUDE.md** (ten) | Reguły, first-run, decision-guides, zasady | Auto-load |
+| **CLAUDE.md** (ten) | Reguły, decision-guides, zasady | Auto-load |
+| **docs/first-run.md** | Start nowego projektu z blueprintu (ścieżka, prune, preflight, kickoff) | Ad-hoc (świeży klon) |
 | **docs/figma-to-block.md** | *Front Figma:* API, tokeny → theme.json, Figma → clamp | Auto-load (ścieżka Figma) |
 | **docs/claude-design-export.md** | *Front Claude Design:* anatomia exportu, kolejność czytania | Auto-load (ścieżka Claude Design) |
 | **docs/html-to-block.md** | *Front Claude Design:* konwersja HTML → bloki (Tryb A/B, wp_insert_post) | Ad-hoc (ścieżka Claude Design) |
@@ -71,6 +46,7 @@ Wartości specyficzne (nazwa, tokeny, prefiksy) odczytuj z `style.css` / `theme.
 | Mam export Claude Design | docs/claude-design-export.md |
 | Konwersja HTML → bloki | docs/html-to-block.md |
 | Nowy blok od zera | docs/block-template.md + front ścieżki |
+| Seed treści / stron (attrs bloków w PHP) | docs/wp-mcp.md §Pułapki |
 | Navbar / menu | docs/patterns/navbar-menu.md |
 | Formularz | docs/patterns/forms.md |
 | Tło sekcji | docs/patterns/backgrounds.md |
@@ -91,14 +67,21 @@ Wartości specyficzne (nazwa, tokeny, prefiksy) odczytuj z `style.css` / `theme.
 ## Architecture
 ```
 blocks/[block-name]/  block.json · index.js · edit.js · save.js (null) · render.php · style.scss · editor.scss · view.js?
-build/                # Output (NIE edytować)
-assets/fonts/ icons/ images/
+build/                # Output (NIE edytować, gitignored — na prodzie `npm run build`)
+assets/fonts/ icons/ images/ js/   # js/ = globalne skrypty spoza bloków (np. content-length-limit.js)
 templates/ parts/     # FSE templates + parts (header, footer)
-patterns/             # WP block patterns (≠ docs/patterns!)
 inc/                  # PHP modules (adwise-login.php, abilities.php…)
 docs/                 # Instrukcje (ten zestaw)
 ```
-Webpack auto-discovers `blocks/*/index.js`+`view.js`; rejestracja: `glob()` w `functions.php` z `build/blocks/*/block.json`. Komendy: `npm run start|build|lint:js|lint:css`.
+Webpack auto-discovers `blocks/*/index.js`+`view.js`; rejestracja: `glob()` w `functions.php` z `build/blocks/*/block.json`.
+
+**Komendy:** `npm run start|build|lint:js|lint:css|format`.
+**Weryfikacja po każdej zmianie** (w tej kolejności):
+```bash
+npm run build && php -l blocks/<blok>/render.php
+curl -s -o /dev/null -w '%{http_code}\n' http://<local-url>/<strona>/   # 200 + zero PHP errors w HTML
+```
++ purge cache (LiteSpeed: `do_action('litespeed_purge_all')` przez WP-CLI/MCP) gdy cache aktywny a zmiana dotyka frontu.
 
 ---
 
@@ -131,7 +114,7 @@ Bloki SSR (`save`→`null`) — `anchor` + `className` **jawnie w `attributes`**
 Namespace = folder theme'u (underscores→hyphens). Textdomain = namespace. Prefix PHP z `functions.php`. Prefix CSS = 2–5 liter per blok.
 
 ### Inline vs Sidebar
-Widoczne na stronie (tytuł, opis, obraz, URL buttona) → **inline** (`RichText`/`MediaUpload`/`LinkControl` popover). Niewidoczna konfiguracja (toggle, select, liczba) → **sidebar**. Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
+WSZYSTKIE kontrolki → **inline** w podglądzie bloku (`RichText`/`MediaUpload`/`LinkControl` popover; konfiguracja typu select/toggle → editor-only kontrolka w podglądzie). **Sidebar TYLKO warianty bloku** (atrybut `variant`). Szczegóły/pułapki → docs/patterns/editor-gotchas.md.
 
 ### Edytor = front 1:1 — KAŻDY blok (egzekwuj per blok)
 - **Media trigger = prawdziwy `<button>`** (preview w środku, 1 klik) — NIGDY `<img onClick>` (w Gutenbergu = 2 kliki, picker nie startuje → „brak edycji"). Każdy `MediaUpload` ma „✕".
@@ -147,7 +130,7 @@ Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jaw
 ---
 
 ## Workflow: design → plan → akceptacja → kod
-1. **Czytaj design** wg ścieżki — Figma (docs/figma-to-block.md) lub export (docs/claude-design-export.md) → tokeny do `theme.json`.
+1. **Czytaj design** wg ścieżki — Figma (docs/figma-to-block.md: screenshot → metadata → design_context na 1 elemencie) lub export (docs/claude-design-export.md) → tokeny do `theme.json`.
 2. **Pytania do usera — wszystkie naraz** (per blok: typ danych, interaktywność, kolumny, pola, klikalność, full-width).
 3. **Plan** — tabela clamp (desktop→mobile), zmiany layout @1024px, atrybuty, struktura. NIE implementuj bez planu.
 4. **Czekaj na akceptację.**
@@ -174,6 +157,8 @@ Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jaw
 - Navbar → `position: sticky` (NIE pure `fixed`, NIE body padding-top)
 - Obrazy user-upload → `object {id,url,alt}` + responsive srcset (NIE do `assets/`)
 - Template parts → edytuj w pliku, NIE w Site Editor
+- Seed treści w PHP → `wp_slash()` przy zapisie + attrs bloków przez `wp_json_encode()` + flush rewrite na `wp_loaded` (docs/wp-mcp.md §Pułapki)
+- Pas obrazu = klasa `adwise-img-band` na `core/image`, NIE własny blok (docs/patterns/media-images.md)
 
 ---
 
@@ -183,4 +168,4 @@ Różni się tylko kolor/tło → atrybut `variant` + klasa modifier (kolory jaw
 - Audyt MD: `claude-md-management:claude-md-improver`.
 
 ## Baseline / Dependencies
-Theme jest już sprovisionowany w blueprincie (functions.php glob + anchor-injection + scroll-margin, theme.json, parts, webpack, login KV w inc/). NIE bootstrapuj WP od zera. Plugin path → docs/plugin-mode.md. Deps: `@wordpress/scripts` ^30, `swiper` ^12, `gsap` ^3 (opcjonalnie — default vanilla IO, docs/patterns/animations.md).
+Theme jest już sprovisionowany w blueprincie (functions.php glob + anchor-injection + scroll-margin, theme.json, parts, webpack, login KV w inc/). NIE bootstrapuj WP od zera. Plugin path → docs/plugin-mode.md. Deps w package.json: `@wordpress/scripts` ^30 (+ copy-webpack-plugin, glob). `swiper`/`gsap` NIE są preinstalowane — instaluj per projekt gdy potrzebne (default animacji: vanilla IO, docs/patterns/animations.md).

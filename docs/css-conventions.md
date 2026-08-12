@@ -16,12 +16,14 @@ Prefix CSS = unikalny 2–5 literowy skrót per blok. Dla istniejącego bloku od
 
 ## Responsywność i breakpointy
 
-**Figma daje desktop (1440px) i mobile.** Widok mobile stosujemy od **1024px** w dół (tablet = layout mobilny). Drugi breakpoint **768px** tylko gdy coś wymaga dodatkowej korekty.
+**Figma daje desktop (1440px) i mobile (zwykle 360px).** Widok mobile stosujemy od **1024px** w dół (tablet = layout mobilny). Drugi breakpoint **600px** = telefon (tam schodzimy do 1 kolumny i wchodzą wartości z mobile Figmy).
 
 ```scss
 @media (max-width: 1024px) { /* tablet + mobile — zmiana LAYOUTU */ }
-@media (max-width: 767px)  { /* tylko drobne korekty */ }
+@media (max-width: 600px)  { /* telefon — 1 kolumna, wartości 1:1 z mobile Figmy */ }
 ```
+
+**Uwaga przy mobile Figmie:** frame 360px często trzyma **te same** wartości co desktop (gap/padding) — nie zaniżaj ich „na oko" przy przepisywaniu; bywa też odwrotnie (element ma na mobile większą typografię niż na desktopie). Czytaj geometrię z `get_metadata`, nie z intuicji.
 
 **Breakpoint zmienia TYLKO layout** (flex-direction, grid-columns, kolejność). **Wartości liczbowe** (font, padding, gap) skalują się przez `clamp()`, NIE przez breakpointy.
 

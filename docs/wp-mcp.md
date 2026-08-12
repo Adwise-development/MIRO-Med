@@ -104,6 +104,48 @@ Analogicznie: `{ns}/seed-cpt`, `{ns}/create-cf7-form`, `{ns}/set-front-page`, `{
 
 ---
 
+## Pułapki seedowania treści (każda kosztowała realny debug — czytaj PRZED seedem)
+
+### 1. `wp_slash()` przy zapisie contentu z tagami w attrs
+`wp_insert_post`/`wp_update_post` **zdziera backslashe** z JSON-a w komentarzach bloków →
+`<li>` w attrs wychodzi jako `u003cli` na froncie (renderuje się goły tekst zamiast listy).
+
+```php
+wp_update_post( [ 'ID' => $id, 'post_content' => wp_slash( $content ) ] ); // ZAWSZE wp_slash
+```
+
+### 2. Attrs bloków buduj przez `wp_json_encode()`, nigdy ręcznym sklejaniem
+Ręcznie sklejony JSON z ASCII `"` w treści = **niepoprawny JSON → kses wycina cały blok attrs**,
+blok cicho spada na defaulty z `block.json` (objaw: „seed przeszedł, a treści nie ma").
+
+```php
+$attrs = wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+$block = '<!-- wp:adwise/' . $name . ' ' . $attrs . ' /-->';
+```
+
+### 3. Flush rewrite dla nowego CPT — hook `wp_loaded`, nie `init`
+`flush_rewrite_rules()` w `init` **nie zapisuje reguł** (WP odracza `update_option`; opcache/workery
+mieszają stan) → single wpisu 404 mimo poprawnego permalinka. Działa:
+
+```php
+add_action( 'wp_loaded', function () {
+	global $wp_rewrite;
+	$wp_rewrite->flush_rules( false );
+} );
+```
+
+### 4. Po seedzie — weryfikuj front, nie „brak błędu PHP"
+`curl` na URL → 200 + sprawdź, czy attrs faktycznie są w HTML (nie defaulty bloku).
+Mu-plugin użyty do seedu **usuń po weryfikacji**.
+
+### 5. KAŻDY blok sekcji w seedzie z `"align":"full"` (też `core/image`)
+Bez tego blok w edytorze stoi jako constrained i user musi ręcznie przestawiać
+(front może wyglądać OK przez template post-content align:full — mylące).
+Custom bloki: `{"align":"full",...}` w attrs. `core/image` band dodatkowo klasa na figure:
+`<figure class="wp-block-image alignfull size-full adwise-img-band">`.
+
+---
+
 ## Fallback (gdy MCP Adapter niedostępny)
 1. **WP-CLI:** `wp post create`, `wp eval-file insert.php`, `wp media import`.
 2. **Ręcznie:** Claude daje snippet PHP → user wkleja (`wp shell` / panel). Zawsze duplicate-check przed `wp_insert_post`.
