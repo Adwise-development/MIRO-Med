@@ -164,7 +164,7 @@ $wrapper = get_block_wrapper_attributes( [ 'class' => 'wp-block-{namespace}-{BLO
 	</div>
 </section>
 ```
-Zawsze: `get_block_wrapper_attributes()`, `wp_kses_post()`, `esc_url()`, `esc_attr()`, `esc_html()`.
+**Escaping wg KONTEKSTU wyjścia, nie źródła danych:** pole RichText → `wp_kses_post()` · zwykły tekst → `esc_html()` · atrybut HTML → `esc_attr()` · `href`/`src` → `esc_url()` (NIGDY `esc_attr` — przepuszcza `javascript:`) · dane do `<script>`/`data-*` → `wp_json_encode()`. `get_block_wrapper_attributes()` zwraca już escapowany string — echo raw. `wp_kses_post()` NIE jest uniwersalnym escapem — na zwykłym tekście luzuje zamiast zacieśniać.
 
 ---
 

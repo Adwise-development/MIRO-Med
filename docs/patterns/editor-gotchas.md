@@ -5,13 +5,22 @@ Pułapki edytora Gutenberga, które najczęściej psują bloki. Czytaj gdy „co
 ---
 
 ## 1. Sidebar vs inline — anti-patterny
-Tabela podstawowa → CLAUDE.md. Najczęstsze błędy:
+Konwencja (CLAUDE.md): **WSZYSTKIE kontrolki inline w podglądzie bloku; sidebar TYLKO warianty** (atrybut `variant`). Mapa typ pola → komponent:
+
+| Pole | Komponent (inline) |
+|------|--------------------|
+| Tekst widoczny | `RichText` |
+| Obraz / ikona | `MediaUpload` (trigger `<button>`) |
+| URL | popover + `LinkControl` |
+| Wybór z listy (menu, formularz CF7, post-type) | `SelectControl` editor-only w podglądzie: picker gdy pusto, preview + ✕ reset gdy wybrane (wzorce: navbar-menu.md, forms.md) |
+| Boolean / liczba (konfiguracja) | `ToggleControl`/`RangeControl` editor-only w podglądzie (ostyluj w editor.scss, np. dashed border) |
+| Wariant kolorystyczny bloku | **sidebar** (`variant`) |
+
+Najczęstsze błędy:
 - **Tekst widoczny na karcie w sidebarze** (tytuł, cena, opis) → ŹLE. Redaktor ma edytować to, co widzi → RichText inline.
 - **URL buttona w sidebarze** → ŹLE. Inline popover + LinkControl (patterns/buttons-links.md).
-- **RangeControl/SelectControl inline** → ŹLE. Konfiguracja (ilość, wariant, delay) → sidebar.
+- **Konfiguracja (select/toggle/liczba) w sidebarze** → ŹLE. Editor-only kontrolka w podglądzie.
 - **„+ Dodaj” w sidebarze** → ŹLE. Pod listą w podglądzie.
-
-Reguła: **widzisz na stronie → inline; nie widzisz (konfiguracja) → sidebar.**
 
 ## 2. Context-aware enqueue (CPT meta panel)
 Panel meta w sidebarze ładuj TYLKO dla właściwego post_type, nie globalnie:

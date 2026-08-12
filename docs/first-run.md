@@ -30,7 +30,8 @@ ten plik nie ma zastosowania — stan bieżący trzyma `project.md`.
 - **Figma MCP** (`figma:*` / `use_figma`) — TYLKO ścieżka Figma. ✗ → user dostarcza screeny/wartości ręcznie.
 - **WP-CLI** (`wp --version`) + **Node/npm** (`npm -v`).
 - **Skille Claude:** `claude-md-management`, `time-tracker`, `context7` (+ `figma` dla ścieżki Figma).
-- **Pluginy WP** (wg zakresu): CF7 (formularz), LiteSpeed (cache → optymalizacja), WPS Hide Login + Limit Login Attempts (login), SVG support — **potwierdź które masz**.
+- **Pluginy WP — WYMAGANE:** LiteSpeed Cache (cache + Image Optimization/webp — `docs/optymalizacja.md` §1–2; hosting bez LiteSpeed → zamiennik cache + JEDEN optymalizator obrazów zamiast) · **WPS Hide Login + Limit Login Attempts Reloaded** (zmiana slugu logowania OBOWIĄZKOWA — nie pytaj „czy", zapytaj **o slug**; `docs/security.md` §1).
+- **Pluginy WP — wg zakresu:** CF7 (formularz), SVG support — **potwierdź które masz**.
 → Wypisz tabelę braków + co znaczą (Claude działa sam vs dowozi snippet), **czekaj na potwierdzenie**.
 
 ## Kickoff — pytania (wszystkie w jednej wiadomości)

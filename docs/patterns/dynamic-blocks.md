@@ -122,3 +122,4 @@ Zawsze: `sanitize_text_field` na stringach, `absint` na intach, `post_type_exist
 - Buduj HTML kart z JSON, appenduj do gridu.
 - `is-loading` class + `aria-busy` na gridzie podczas fetch.
 - Ukryj button gdy `paged >= max-pages`.
+- **SEO fallback:** „Załaduj więcej" w render.php = `<a href="/{archive}/page/2/">` (pretty pagination), NIE goły `<button>`; view.js przechwytuje click (`preventDefault`) i robi fetch. Bez JS crawler dostaje normalny link do paginacji.

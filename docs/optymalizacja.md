@@ -27,7 +27,7 @@ JS Minify:         ON
 JS Combine:        OFF  (gdy są lazy chunki, np. Swiper — combine je psuje)
 JS Defer:          ON   (ALE przetestuj wysyłkę CF7 — może wymagać wykluczenia)
 Font Display:      Swap
-Image Lazy Load:   ON
+Image Lazy Load:   ON   (WYKLUCZ obraz hero/LCP w Media → Lazy Load Exclude — inaczej plugin sabotuje LCP)
 Object cache (Redis/Memcached): ON jeśli host wspiera
 ```
 `.htaccess` (jeśli bez pluginu cache): immutable dla assetów (1 rok), no-cache dla HTML.
@@ -41,18 +41,19 @@ Po każdej zmianie na prod → **purge cache** (plugin + CDN). Patrz `migracja-p
 ---
 
 ## 2. Obrazy — format i waga
-- **WebP/AVIF auto** przy uploadzie (WP 5.8+, AVIF wymaga WP 6.5+ i wsparcia serwera). Filter mapuje źródło → format wyjściowy sub-rozmiarów:
-  ```php
-  add_filter( 'image_editor_output_format', function ( $formats ) {
-  	$formats['image/jpeg'] = 'image/webp';
-  	$formats['image/png']  = 'image/webp';
-  	return $formats;
-  } );
+
+**Optymalizacja obrazów = wtyczka, NIE kod w theme.** Filtry PHP w functions.php (`image_editor_output_format` → webp, `wp_editor_set_quality`) są ZABRONIONE: działają tylko dla nowych uploadów, gryzą się z wtyczkami konwertującymi i kończą jako zakomentowany martwy kod (lekcja z wdrożenia).
+
+- **Właściciel formatu: LiteSpeed Cache → Image Optimization** (QUIC.cloud, plugin wymagany — first-run.md). Konwersja webp asynchronicznie po stronie QUIC (omija PHP timeout), serving przez WebP Replacement:
   ```
-  (Filter generuje JEDEN format zastępczy per źródło — nie listę. AVIF: `'image/avif'` zamiast webp, gdy serwer ma wsparcie.)
-- **`-scaled` gotcha:** WP tworzy `{plik}-scaled.{ext}` dla obrazów >2560px (`big_image_size_threshold`). Konwertuj/zmniejsz źródła <2560px przed uploadem → WP nie robi `-scaled`. Oryginał zawsze zostaje na dysku.
-- Kompresja źródeł przed uploadem (Squoosh / `cwebp`) — jakość 75–82 zwykle wystarcza.
-- Ostateczna optymalizacja: LSCache „Image Optimization" (asynchronicznie, omija PHP timeout cron).
+  Auto Request Cron:       ON
+  Optimize Original Images: ON (trzyma backup)
+  WebP Replacement:        ON
+  WebP For Extra srcset:   ON
+  ```
+- **JEDEN właściciel webp** — nigdy druga wtyczka konwertująca równolegle. Hosting bez LiteSpeed → EWWW/ShortPixel ZAMIAST (nie obok), z LSCache Image Opt OFF.
+- **`-scaled` gotcha:** WP tworzy `{plik}-scaled.{ext}` dla obrazów >2560px (`big_image_size_threshold`). Zmniejsz źródła <2560px przed uploadem → WP nie robi `-scaled`. Oryginał zawsze zostaje na dysku.
+- Eksporty @2x z Figmy bywają ogromne — pojedynczy plik >1 MB przepuść przez Squoosh/`cwebp` (jakość 75–82) przed uploadem; resztę załatwia wtyczka.
 
 ---
 

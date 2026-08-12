@@ -276,9 +276,14 @@ font-size: clamp(24px, calc(24px + 24 * ((100vw - 768px) / 672)), 48px);
 
 ### Pobieranie batch
 ```bash
-mkdir -p assets/images/{block-name}
-xargs -n 1 -I {} curl -o "assets/images/{block-name}/$(basename {})" {} <<EOF
-https://source.example.com/image1.jpg
+DEST="assets/images/{block-name}"; mkdir -p "$DEST"
+while IFS= read -r url; do
+  [ -z "$url" ] && continue
+  # Usuń query string (?w=800) PRZED basename, inaczej nazwa pliku będzie błędna:
+  fname="$(basename "${url%%\?*}")"
+  curl -fsSL -o "$DEST/$fname" "$url"
+done <<'EOF'
+https://source.example.com/image1.jpg?w=800
 https://source.example.com/image2.jpg
 EOF
 ```
@@ -331,8 +336,8 @@ Wykryj typ z HTML/JS i dobierz pattern. **Konkretne patterny scaffoldingu** (Sli
 | AOS / WOW.js | zamień na globalny reveal projektu (jak wyżej) |
 | Smooth scroll do anchor | sprawdź czy projekt ma global `scroll-behavior: smooth` (`functions.php`); jeśli nie — dodaj |
 | Sticky header on scroll | navbar `position: fixed` + `view.js` toggle `.is-scrolled` |
-| Counter / number animation | `view.js` z IntersectionObserver + GSAP |
-| Parallax | `view.js` z GSAP ScrollTrigger lub CSS `background-attachment: fixed` |
+| Counter / number animation | `view.js` z IntersectionObserver + rAF (patterns/animations.md); GSAP TYLKO jeśli już w `package.json` |
+| Parallax | CSS `background-attachment: fixed` lub IO + rAF; GSAP ScrollTrigger TYLKO jeśli już w `package.json` |
 | Hamburger menu | sprawdź `block-template.md` Pattern: Navbar (jeśli istnieje); inaczej standardowy toggle |
 
 ### Reguła: NIE kopiuj custom JS 1:1

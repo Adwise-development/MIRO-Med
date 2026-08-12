@@ -33,6 +33,7 @@ Po ukończeniu first-run **przepisz tę sekcję** na `## Stan projektu` (wzór n
 | **docs/patterns/** | navbar-menu, forms, backgrounds, media-images, buttons-links, dynamic-blocks, slider, animations, editor-gotchas | Ad-hoc |
 | **docs/plugin-mode.md** | Bloki jako plugin (bootstrap, tokeny, scope, template) | Ad-hoc |
 | **docs/wp-mcp.md** | Akcje runtime (WP MCP Adapter): postaw stronę, seed CPT, CF7 | Ad-hoc |
+| **docs/security.md** | Baseline security (lekcje z incydentu 2026-08-06): login, hardening, monitoring, po-incydencie | Ad-hoc (wdrożenie/prod) |
 | **docs/optymalizacja.md** | Performance & a11y: cache, obrazy, fonty, JS, CWV, WP_Query | Ad-hoc |
 | **docs/migracja-prod.md** | Wdrożenie dev→prod | Ad-hoc |
 | **docs/recipes/login-page/** | Rebrand login KV (live: `inc/adwise-login.php`) | Ad-hoc |
@@ -60,6 +61,7 @@ Po ukończeniu first-run **przepisz tę sekcję** na `## Stan projektu` (wzór n
 | Akcje runtime (postaw stronę, seed CPT, CF7) | docs/wp-mcp.md |
 | Performance / a11y | docs/optymalizacja.md |
 | Wdrożenie prod | docs/migracja-prod.md |
+| Hardening / logowanie / incydent | docs/security.md |
 | Rebrand login | docs/recipes/login-page/ |
 
 ---

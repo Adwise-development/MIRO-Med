@@ -51,15 +51,18 @@ Globalna klasa `reveal` + jeden IO. Lekkie, zero bundle. Plik `assets/js/reveal.
 ---
 
 ## Count-up (liczniki)
-Osobny IO z wyższym progiem (`threshold: 0.6` — uruchom gdy licznik dobrze widoczny):
+Osobny IO z wyższym progiem (`threshold: 0.6` — uruchom gdy licznik dobrze widoczny).
+
+**SEO/no-JS:** render.php wypisuje **finalną wartość** w HTML (Googlebot bez JS ma widzieć „50", nie „0") — JS zeruje dopiero w momencie startu animacji:
 ```html
-<span class="{PREFIX}__num" data-to="50">0</span>
+<span class="{PREFIX}__num" data-to="50">50</span>
 ```
 ```js
 const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => {
 	if ( ! e.isIntersecting ) return;
 	const el = e.target, to = parseInt( el.dataset.to, 10 );
-	let cur = 0; const step = Math.max( 1, Math.round( to / 60 ) );
+	let cur = 0; el.textContent = '0'; // zeruj dopiero tu — nie w HTML
+	const step = Math.max( 1, Math.round( to / 60 ) );
 	const tick = () => { cur = Math.min( to, cur + step ); el.textContent = cur; if ( cur < to ) requestAnimationFrame( tick ); };
 	tick(); io.unobserve( el );
 } ), { threshold: 0.6 } );

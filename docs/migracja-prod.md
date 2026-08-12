@@ -119,11 +119,13 @@ Jeśli edytowano header/footer w **Site Editor** na dev → siedzą w DB (`wp_te
 - [ ] Strona główna + podstrony renderują się (permalinki OK)
 - [ ] Brak mixed content / 404 na assetach (konsola, Network)
 - [ ] Formularze CF7: test wysyłki + dotarcie maila (sprawdź spam)
-- [ ] Mobile: bloki responsywne (@1024 / @767)
+- [ ] Mobile: bloki responsywne (@1024 / @600)
 - [ ] `blog_public = 1`, robots.txt OK
 - [ ] Cache + CDN wyczyszczone
 - [ ] Login slug działa, `/wp-admin` i `/wp-login.php` zachowują się wg hardeningu
+- [ ] Hardening curl-checks przeszły (xmlrpc 403, wp-login 404, ?author 301, /users 401) — security.md §Weryfikacja
 - [ ] Lighthouse / PageSpeed mobile (optymalizacja.md)
+- [ ] Webp serwowany (DevTools → Network → typ obrazów = webp, nie png/jpg) — LSCache Image Optimization przeszedł
 
 ---
 

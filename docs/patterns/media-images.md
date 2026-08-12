@@ -185,9 +185,10 @@ add_filter( 'upload_mimes', function ( $m ) {
 	return $m;
 } );
 
-// 2. Wymuś poprawny mime (WP często myli SVG)
+// 2. Wymuś poprawny mime (WP często myli SVG) — z TYM SAMYM guardem co upload_mimes,
+// inaczej filtr ślepo legalizuje SVG w kontekstach bez usera (cron/sideload) = bypass
 add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename ) {
-	if ( empty( $data['type'] ) && preg_match( '/\.svgz?$/i', $filename ) ) {
+	if ( empty( $data['type'] ) && preg_match( '/\.svgz?$/i', $filename ) && current_user_can( 'manage_options' ) ) {
 		$data['ext'] = 'svg'; $data['type'] = 'image/svg+xml';
 	}
 	return $data;
