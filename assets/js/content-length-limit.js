@@ -4,121 +4,142 @@
  * Używany w edit.js bloków do ograniczania długości tekstu w RichText.
  *
  * Mnożniki globalne (ustawiane w functions.php przez wp_add_inline_script):
- *   window.BLOKEE.contentLength = {
- *     heading: N,  // BLOKEE_CL_HEADING_MULTIPLIER (domyślnie 2)
- *     text:    M,  // BLOKEE_CL_TEXT_MULTIPLIER (domyślnie 3)
+ *   window.ADWISE.contentLength = {
+ *     heading: N,  // ADWISE_CL_HEADING_MULTIPLIER (domyślnie 3)
+ *     text:    M,  // ADWISE_CL_TEXT_MULTIPLIER (domyślnie 5)
  *   };
  *
  * Użycie w edit.js:
- *   // Nagłówek (h1/h2/h3) — ścisły limit:
- *   const h = window.BLOKEE.useLengthLimit({
+ *   const h = window.ADWISE.useLengthLimit({
  *     get: () => heading,
  *     set: ( v ) => setAttributes( { heading: v } ),
  *     ref: 'Nagłówek sekcji',
  *     noticeId: 'hero-heading',
- *     type: 'heading',             // wybiera multiplier = window.BLOKEE.contentLength.heading
+ *     type: 'heading',             // multiplier = window.ADWISE.contentLength.heading
  *   });
- *
- *   // Paragraf/opis — luźniejszy limit:
- *   const p = window.BLOKEE.useLengthLimit({
- *     get: () => description,
- *     set: ( v ) => setAttributes( { description: v } ),
- *     ref: 'Lorem ipsum dolor...',
- *     noticeId: 'hero-desc',
- *     type: 'text',                // (lub pomiń — text to default)
- *   });
- *
  *   <RichText value={heading} {...h} placeholder="..." allowedFormats={[]} />
  *
  * Override globalnego mnożnika per pole:
- *   useLengthLimit({ ..., multiplier: 5 })  // własna wartość
+ *   useLengthLimit({ ..., multiplier: 5 })
+ *
+ * Uwaga edytor-w-iframe (WP 6.3+): selekcja i execCommand muszą operować na
+ * dokumencie zdarzenia (e.target.ownerDocument), NIE na oknie rodzica.
  */
 ( function () {
-	if ( ! window.wp?.data || ! window.wp?.notices ) {
-		console.warn( 'BLOKEE content-length-limit: wp.data or wp.notices not available' );
-		return;
+	window.ADWISE = window.ADWISE || {};
+
+	const hasDeps = !! ( window.wp && window.wp.data && window.wp.notices );
+	if ( ! hasDeps ) {
+		// eslint-disable-next-line no-console -- dev diagnostyka gdy edytor ładuje helper bez zależności
+		console.warn(
+			'ADWISE content-length-limit: wp.data / wp.notices niedostępne — limity wyłączone (no-op).'
+		);
 	}
 
-	const { useDispatch } = window.wp.data;
-	const { store: noticesStore } = window.wp.notices;
+	const { useDispatch } = hasDeps ? window.wp.data : {};
+	const noticesStore = hasDeps ? window.wp.notices.store : null;
 
-	window.BLOKEE = window.BLOKEE || {};
-
-	/**
-	 * Wybiera mnożnik wg typu lub explicit override.
-	 */
 	const resolveMultiplier = ( type, explicit ) => {
-		if ( typeof explicit === 'number' && explicit > 0 ) return explicit;
-		const cfg = window.BLOKEE?.contentLength || {};
-		if ( type === 'heading' ) return Number( cfg.heading ) || 2;
-		return Number( cfg.text ) || 3;  // 'text' lub domyślny
+		if ( typeof explicit === 'number' && explicit > 0 ) {
+			return explicit;
+		}
+		const cfg = window.ADWISE.contentLength || {};
+		if ( type === 'heading' ) {
+			return Number( cfg.heading ) || 3;
+		}
+		return Number( cfg.text ) || 5; // 'text' lub domyślny
+	};
+
+	// Strip tagów + dekodowanie encji → realna długość widzianego tekstu.
+	const stripHtml = ( v ) => {
+		const noTags = String( v || '' ).replace( /<[^>]*>/g, '' );
+		return noTags
+			.replace( /&nbsp;/g, ' ' )
+			.replace( /&#0*39;|&apos;/g, "'" )
+			.replace( /&quot;/g, '"' )
+			.replace( /&lt;/g, '<' )
+			.replace( /&gt;/g, '>' )
+			.replace( /&amp;/g, '&' );
 	};
 
 	/**
 	 * React hook — zwraca { onChange, onKeyDown, onPaste } dla RichText.
+	 * Bez wp.data/notices zwraca no-op (onChange = passthrough), żeby edit.js
+	 * NIGDY nie dostał undefined (inaczej TypeError w renderze = biały ekran edytora).
 	 *
-	 * @param {object}   opts
-	 * @param {Function} opts.get        - () => current value
-	 * @param {Function} opts.set        - ( val ) => setAttributes / updateItem
-	 * @param {string}   opts.ref        - default text (długość × multiplier = max)
-	 * @param {string}   opts.noticeId   - unikalny id snackbara
-	 * @param {'heading'|'text'} [opts.type='text'] - typ pola (default 'text')
-	 * @param {number}   [opts.multiplier] - override globalnego mnożnika
+	 * @param {Object}   opts              Konfiguracja pola.
+	 * @param {Function} opts.get          () => aktualna wartość.
+	 * @param {Function} opts.set          ( val ) => setAttributes.
+	 * @param {string}   opts.ref          Tekst referencyjny (długość × mnożnik = max).
+	 * @param {string}   opts.noticeId     Unikalny id snackbara.
+	 * @param {string}   [opts.type]       'heading' | 'text' (domyślnie 'text').
+	 * @param {number}   [opts.multiplier] Override globalnego mnożnika.
+	 * @return {Object} Handlery { onChange, onKeyDown, onPaste }.
 	 */
-	window.BLOKEE.useLengthLimit = function ( opts ) {
+	function useLengthLimit( opts ) {
 		const { get, set, ref, noticeId, type = 'text' } = opts;
+
+		if ( ! hasDeps ) {
+			return { onChange: set, onKeyDown: () => {}, onPaste: () => {} };
+		}
+
 		const multiplier = resolveMultiplier( type, opts.multiplier );
-		const max = ( ref?.length || 0 ) * multiplier;
+		// Dolna granica: krótki ref nie może zablokować pola całkowicie.
+		const max = Math.max( 40, ( ref?.length || 0 ) * multiplier );
 
+		// eslint-disable-next-line react-hooks/rules-of-hooks -- hasDeps to stała modułowa: ścieżka hooków deterministyczna per środowisko, kolejność się nie zmienia między renderami
 		const { createWarningNotice } = useDispatch( noticesStore );
-
-		const warn = () => {
-			createWarningNotice(
-				`Tekst za długi — maks. ${ max } znaków`,
-				{ type: 'snackbar', id: noticeId }
-			);
-		};
-
-		const stripHtml = ( v ) => String( v || '' ).replace( /<[^>]*>/g, '' );
+		const warn = () =>
+			createWarningNotice( `Tekst za długi — maks. ${ max } znaków`, {
+				type: 'snackbar',
+				id: noticeId,
+			} );
 
 		return {
+			// Przekroczenie → NIE zapisuj (zostaw poprzednią wartość). NIE tnij na
+			// stripHtml — to kasowało bold/linki i rozcinało emoji.
 			onChange: ( val ) => {
-				const text = stripHtml( val );
-				if ( text.length <= max ) {
+				if ( stripHtml( val ).length <= max ) {
 					set( val );
 				} else {
-					set( text.slice( 0, max ) );
 					warn();
 				}
 			},
 
 			onKeyDown: ( e ) => {
-				if ( e.ctrlKey || e.metaKey || e.altKey ) return;
-				if ( e.key.length !== 1 ) return;
-				const sel = window.getSelection();
-				if ( sel && ! sel.isCollapsed ) return;
-				const currentLen = stripHtml( get() ).length;
-				if ( currentLen >= max ) {
+				if ( e.ctrlKey || e.metaKey ) {
+					return;
+				}
+				if ( e.key.length !== 1 ) {
+					return;
+				}
+				// Selekcja z dokumentu zdarzenia (iframe edytora), nie z okna rodzica.
+				const win = e.target.ownerDocument.defaultView;
+				const sel = win.getSelection();
+				if ( sel && ! sel.isCollapsed ) {
+					return;
+				} // zamiana zaznaczenia nie zwiększa długości
+				if ( stripHtml( get() ).length >= max ) {
 					e.preventDefault();
 					warn();
 				}
 			},
 
+			// Gdy wklejenie przekroczyłoby limit → blokuj całość + ostrzeż (user skróci).
+			// Nie wstawiamy przyciętego przez execCommand — w iframe zawodzi i gubi treść.
 			onPaste: ( e ) => {
-				const currentLen = stripHtml( get() ).length;
-				const pasted = ( e.clipboardData || window.clipboardData ).getData( 'text/plain' );
-				const available = max - currentLen;
-				if ( available <= 0 ) {
+				const available = max - stripHtml( get() ).length;
+				const pasted =
+					e.clipboardData ||
+					e.target.ownerDocument.defaultView.clipboardData;
+				const text = pasted ? pasted.getData( 'text/plain' ) : '';
+				if ( text.length > available ) {
 					e.preventDefault();
-					warn();
-					return;
-				}
-				if ( pasted.length > available ) {
-					e.preventDefault();
-					document.execCommand( 'insertText', false, pasted.slice( 0, available ) );
 					warn();
 				}
 			},
 		};
-	};
+	}
+
+	window.ADWISE.useLengthLimit = useLengthLimit;
 } )();

@@ -53,12 +53,18 @@ Domyślne toole: `core/get-site-info`, `core/get-user-info`, `core/get-environme
 
 ## Akcje budowania = własne abilities (zamiast execute-php)
 
-Żeby Claude stawiał strony / seedował / tworzył CF7 → zarejestruj **typed abilities** w `inc/abilities.php` (require w functions.php), oznacz `meta.mcp.public => true`, wystaw na serwerze MCP. Przykład „postaw stronę z listy bloków":
+Żeby Claude stawiał strony / seedował / tworzył CF7 → zarejestruj **typed abilities** w `inc/abilities.php` (require w functions.php), wystaw na serwerze MCP. Kontrakt core (WP 6.9+, zweryfikowany na WP 7.0): **kategorie i abilities to DWA różne hooki** — `wp_register_ability_category()` TYLKO na `wp_abilities_api_categories_init` (poza nim core robi `_doing_it_wrong` + null), `wp_register_ability()` na `wp_abilities_api_init`; `category` WYMAGane i musi wskazywać kategorię z tego pierwszego hooka; wywoływalność REST/MCP wymaga `meta.show_in_rest => true`. Przykład „postaw stronę z listy bloków":
 
 ```php
-add_action( 'abilities_api_init', function () {
+// Kategoria — OSOBNY, wcześniejszy hook (inaczej null → wszystkie abilities z tą kategorią też null).
+add_action( 'wp_abilities_api_categories_init', function () {
+	wp_register_ability_category( '{ns}-runtime', [ 'label' => 'Akcje runtime', 'description' => '...' ] );
+} );
+
+add_action( 'wp_abilities_api_init', function () {
 	wp_register_ability( '{ns}/create-page', [
 		'label'        => 'Utwórz stronę z bloków',
+		'category'     => '{ns}-runtime',
 		'input_schema' => [ 'type' => 'object', 'properties' => [
 			'title'  => [ 'type' => 'string' ],
 			'slug'   => [ 'type' => 'string' ],
@@ -67,26 +73,30 @@ add_action( 'abilities_api_init', function () {
 		'output_schema'       => [ 'type' => 'object' ],
 		'permission_callback' => fn() => current_user_can( 'publish_pages' ), // realna capability!
 		'execute_callback'    => function ( $input ) {
-			$existing = get_page_by_path( $input['slug'], OBJECT, 'page' );
+			$slug     = sanitize_title( $input['slug'] );
+			$existing = get_posts( [ 'name' => $slug, 'post_type' => 'page', 'post_status' => [ 'publish', 'draft' ], 'numberposts' => 1 ] );
 			if ( $existing ) {
-				return [ 'status' => 'exists', 'id' => $existing->ID, 'url' => get_permalink( $existing->ID ) ];
+				return [ 'status' => 'exists', 'id' => $existing[0]->ID, 'url' => get_permalink( $existing[0]->ID ) ];
 			}
 			$id = wp_insert_post( [
 				'post_type'   => 'page', 'post_status' => 'publish',
 				'post_title'  => sanitize_text_field( $input['title'] ),
-				'post_name'   => sanitize_title( $input['slug'] ),
-				'post_content'=> $input['blocks'], // bloki self-closing → defaulty z block.json
-			] );
+				'post_name'   => $slug,
+				'post_content'=> wp_slash( $input['blocks'] ), // wp_slash — inaczej JSON attrs się psuje (§Pułapki)
+			], true );
+			if ( is_wp_error( $id ) ) return [ 'status' => 'error', 'message' => $id->get_error_message() ];
 			return [ 'status' => 'created', 'id' => $id, 'url' => get_permalink( $id ) ];
 		},
-		'meta' => [ 'mcp' => [ 'public' => true ] ],
+		'meta' => [ 'show_in_rest' => true, 'annotations' => [ 'destructiveHint' => true ] ],
 	] );
 } );
 ```
 
 Analogicznie: `{ns}/seed-cpt`, `{ns}/create-cf7-form`, `{ns}/set-front-page`, `{ns}/flush-rewrites`. **Typed + permission-gated = bezpieczniej niż arbitralny execute-php.**
 
-> **API młode** — dokładną sygnaturę `wp_register_ability` / hook (`abilities_api_init`) + sposób wpięcia abilities na serwer (custom `create_server` vs default-server `meta.mcp.public`) **zweryfikuj w** `developer.wordpress.org/apis/abilities/` i README `WordPress/mcp-adapter` przy wdrożeniu.
+> **`seed-cpt` — nie ufaj `post_type_exists()`:** sprawdź `$pto->public && $pto->show_in_rest` + `current_user_can( $pto->cap->create_posts )` per typ. Samo globalne `publish_posts` pozwala roli Author wstrzyknąć `wp_template_part`/`wp_navigation` = trwały HTML w layout (referencja: `inc/abilities.php`).
+>
+> **Smoke test po rejestracji:** `wp eval 'var_dump( wp_get_ability("{ns}/create-page") );'` — `null` = ability się nie zarejestrowała (zły hook / brak category / literówka). API młode — sygnaturę i wpięcie na serwer MCP zweryfikuj w `developer.wordpress.org/apis/abilities/` + README `WordPress/mcp-adapter`.
 
 ---
 

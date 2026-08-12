@@ -70,24 +70,26 @@ add_action( 'enqueue_block_editor_assets', function () {
  * Dozwolone TYLKO dla userów z capability `edit_posts` (admin/editor/author).
  * ---------------------------------------------------------------------- */
 add_filter( 'upload_mimes', function ( $mimes ) {
+	// Bez svgz: to gzip, więc sanitizer poniżej (pracuje na tekście) byłby na nim no-opem.
 	if ( current_user_can( 'edit_posts' ) ) {
-		$mimes['svg']  = 'image/svg+xml';
-		$mimes['svgz'] = 'image/svg+xml';
+		$mimes['svg'] = 'image/svg+xml';
 	}
 	return $mimes;
 } );
 
-// WP 5.0.1+ sprawdza real MIME — trzeba nadpisać dla SVG
+// WP 5.0.1+ sprawdza real MIME — trzeba nadpisać dla SVG.
+// TEN SAM guard capability co upload_mimes — bez niego filtr legalizuje SVG
+// w kontekstach bez zalogowanego usera (cron, wp_handle_sideload) = bypass bramki.
 add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename ) {
 	if ( ! empty( $data['ext'] ) && ! empty( $data['type'] ) ) {
+		return $data;
+	}
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		return $data;
 	}
 	$ext = strtolower( pathinfo( $filename, PATHINFO_EXTENSION ) );
 	if ( 'svg' === $ext ) {
 		$data['ext']  = 'svg';
-		$data['type'] = 'image/svg+xml';
-	} elseif ( 'svgz' === $ext ) {
-		$data['ext']  = 'svgz';
 		$data['type'] = 'image/svg+xml';
 	}
 	return $data;
@@ -105,21 +107,52 @@ add_filter( 'wp_handle_upload_prefilter', function ( $file ) {
 	if ( false === $content ) {
 		return $file;
 	}
-	$content = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $content );
-	$content = preg_replace( '/<foreignObject\b[^>]*>.*?<\/foreignObject>/is', '', $content );
-	$content = preg_replace( '/\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]*)/i', '', $content );
-	$content = preg_replace( '/javascript\s*:/i', '', $content );
-	$content = preg_replace( '/<!ENTITY[^>]*>/i', '', $content );
+	// UWAGA: to best-effort sanitizer regexowy — NIE jest kompletny (SVG to XML,
+	// wektory typu encje/CDATA/base64 go obchodzą). Na produkcji użyj `safe-svg`
+	// lub `enshrined/svg-sanitize`. Poniżej zamknięte tylko najczęstsze dziury.
+	$patterns = [
+		'/<script\b[^>]*>.*?<\/script>/is', // <script>...</script>
+		'/<script\b[^>]*\/?>/i',            // <script .../> self-closing (xlink:href)
+		'/<(foreignObject|use|animate|animateTransform|set|handler|listener)\b[^>]*>.*?<\/\1>/is',
+		'/<(foreignObject|use|animate|animateTransform|set)\b[^>]*\/?>/i',
+		'/<style\b[^>]*>.*?<\/style>/is',   // @import / url() w <style>
+		'/[\s\/]on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]*)/i', // on*= także <svg/onload=
+		'/(href|xlink:href)\s*=\s*("|\'|)\s*javascript:[^"\'>]*/i',
+		'/javascript\s*:/i',
+		'/<!ENTITY[^>]*>/i',
+		'/<!\[CDATA\[.*?\]\]>/is',
+	];
+	foreach ( $patterns as $p ) {
+		$out = preg_replace( $p, '', $content );
+		if ( null === $out ) { // pcre backtrack limit na dużym SVG → nie zapisuj popsutego
+			$file['error'] = 'Nie udało się zsanityzować SVG (zbyt złożony). Użyj wtyczki safe-svg.';
+			return $file;
+		}
+		$content = $out;
+	}
+	if ( stripos( $content, '<svg' ) === false ) {
+		$file['error'] = 'Niepoprawny SVG.';
+		return $file;
+	}
 
-	file_put_contents( $file['tmp_name'], $content );
+	if ( false === file_put_contents( $file['tmp_name'], $content ) ) {
+		$file['error'] = 'Nie udało się zapisać zsanityzowanego SVG.';
+	}
 	return $file;
 } );
 
-// Preview SVG w media library grid (WP domyślnie nie pokazuje thumbnail SVG)
+// Preview SVG w media library grid (WP domyślnie nie pokazuje thumbnail SVG).
+// Tylko na ekranach mediów/edycji — nie na każdym ekranie wp-admin.
 add_action( 'admin_head', function () {
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$media_screens = [ 'upload', 'post', 'page' ];
+	if ( ! $screen || ! in_array( $screen->base, $media_screens, true ) ) {
+		return;
+	}
+	// [src*=".svg"] (nie [src$]) — URL miniatury bywa z query stringiem.
 	echo '<style>
-		.attachment-preview .thumbnail img[src$=".svg"],
-		.media-icon img[src$=".svg"] {
+		.attachment-preview .thumbnail img[src*=".svg"],
+		.media-icon img[src*=".svg"] {
 			width: 100%;
 			height: auto;
 			max-width: 100%;
@@ -147,15 +180,20 @@ add_action( 'init', function () {
  * (bloki SSR z `save → null` nie renderują id same z siebie)
  * ---------------------------------------------------------------------- */
 add_filter( 'render_block', function ( $block_content, $block ) {
-	if ( empty( $block['attrs']['anchor'] ) ) {
+	if ( empty( $block['attrs']['anchor'] ) || '' === trim( (string) $block_content ) ) {
 		return $block_content;
 	}
-	$anchor = esc_attr( $block['attrs']['anchor'] );
-	// Nie wstrzykuj jeśli pierwszy tag już ma id=
-	if ( preg_match( '/<[a-z][^>]*\sid=/i', substr( $block_content, 0, 200 ) ) ) {
-		return $block_content;
+	// WP_HTML_Tag_Processor (WP 6.2+): poprawnie znajduje pierwszy tag i escapuje
+	// wartość atrybutu. Zastępuje regex, który psuł tagi samozamykające i przepuszczał
+	// backreference injection (`$1`) z wartości anchor do stringu zastępującego preg_replace.
+	$processor = new WP_HTML_Tag_Processor( $block_content );
+	if ( $processor->next_tag() ) {
+		if ( null === $processor->get_attribute( 'id' ) ) {
+			$processor->set_attribute( 'id', $block['attrs']['anchor'] );
+		}
+		return $processor->get_updated_html();
 	}
-	return preg_replace( '/(<[a-z][^>]*)(>)/i', '$1 id="' . $anchor . '"$2', $block_content, 1 );
+	return $block_content;
 }, 10, 2 );
 
 /* -------------------------------------------------------------------------
@@ -164,10 +202,11 @@ add_filter( 'render_block', function ( $block_content, $block ) {
  * i dodaj body{padding-top:var(--nav-h)} (patrz docs/patterns/navbar-menu.md).
  * ---------------------------------------------------------------------- */
 add_action( 'wp_head', function () {
+	// scroll-behavior tylko gdy user nie prosił o ograniczenie ruchu (WCAG 2.3.3).
 	echo '<style>
-		html{scroll-behavior:smooth}
 		:root{--nav-h:0px}
 		[id]{scroll-margin-top:calc(var(--nav-h) + 16px)}
+		@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
 	</style>';
 } );
 
@@ -195,9 +234,12 @@ if ( ! defined( 'ADWISE_SECURITY_HARDENING' ) ) {
 	add_filter( 'xmlrpc_enabled', '__return_false' );
 	add_filter( 'xmlrpc_methods', '__return_empty_array' );
 
-	// REST: ukryj endpoint users (enumeracja)
+	// REST: ukryj endpoint users przed ANONIMAMI (enumeracja). Zalogowanym zostawiamy —
+	// edytor bloków wymaga /wp/v2/users do panelu autora (inaczej „nie mogę zmienić autora").
 	add_filter( 'rest_endpoints', function ( $endpoints ) {
-		unset( $endpoints['/wp/v2/users'], $endpoints['/wp/v2/users/(?P<id>[\d]+)'] );
+		if ( ! is_user_logged_in() ) {
+			unset( $endpoints['/wp/v2/users'], $endpoints['/wp/v2/users/(?P<id>[\d]+)'] );
+		}
 		return $endpoints;
 	} );
 

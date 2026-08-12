@@ -2,6 +2,8 @@
 
 <!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
 <main class="wp-block-group">
+	<!-- wp:query-title {"type":"search","level":1} /-->
+
 	<!-- wp:query {"queryId":0,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","inherit":true},"layout":{"type":"constrained"}} -->
 	<div class="wp-block-query">
 		<!-- wp:post-template -->
@@ -21,8 +23,10 @@
 
 		<!-- wp:query-no-results -->
 		<!-- wp:paragraph -->
-		<p>Brak wpisów do wyświetlenia.</p>
+		<p>Brak wyników dla podanej frazy.</p>
 		<!-- /wp:paragraph -->
+
+		<!-- wp:search {"label":"Szukaj ponownie","buttonText":"Szukaj"} /-->
 		<!-- /wp:query-no-results -->
 	</div>
 	<!-- /wp:query -->
