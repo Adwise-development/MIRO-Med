@@ -14,6 +14,13 @@ define( 'ADWISE_VERSION', '1.0.0' );
 define( 'ADWISE_DIR', get_template_directory() );
 define( 'ADWISE_URI', get_template_directory_uri() );
 
+// Composer autoload — enshrined/svg-sanitize (sanityzacja SVG przy uploadzie).
+if ( is_readable( ADWISE_DIR . '/vendor/autoload.php' ) ) {
+	require_once ADWISE_DIR . '/vendor/autoload.php';
+	// Subklasa domykająca gołe zewnętrzne href/xlink:href (poza url(...)).
+	require_once ADWISE_DIR . '/inc/class-adwise-svg-sanitizer.php';
+}
+
 /**
  * Mnożniki max długości tekstu w RichText (block editor).
  * max = default_text.length × multiplier. Zmień tu → wpływa na wszystkie bloki.
@@ -65,8 +72,9 @@ add_action( 'enqueue_block_editor_assets', function () {
 
 /* -------------------------------------------------------------------------
  * SVG upload support (dla ikon w blokach)
- * Minimal sanitizer usuwa <script>, <foreignObject>, on*= eventy, javascript:, <!ENTITY>.
- * Dla production-grade rozważ plugin `safe-svg` lub `enshrined/svg-sanitize`.
+ * Sanityzacja przez `enshrined/svg-sanitize` (vendor/, parser XML + allowlist — nie regex):
+ * usuwa <script>, handlery on*, javascript:, zewn. referencje, blokuje XXE/encje.
+ * Ta sama biblioteka, którą owija wtyczka safe-svg — bez wymogu instalacji pluginu.
  * Dozwolone TYLKO dla userów z capability `edit_posts` (admin/editor/author).
  * ---------------------------------------------------------------------- */
 add_filter( 'upload_mimes', function ( $mimes ) {
@@ -95,7 +103,7 @@ add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename ) {
 	return $data;
 }, 10, 3 );
 
-// Sanityzuj SVG przy uploadzie — usuń niebezpieczne elementy/atrybuty
+// Sanityzuj SVG przy uploadzie — enshrined/svg-sanitize (parser XML + allowlist).
 add_filter( 'wp_handle_upload_prefilter', function ( $file ) {
 	if ( ! isset( $file['type'] ) || 'image/svg+xml' !== $file['type'] ) {
 		return $file;
@@ -103,40 +111,24 @@ add_filter( 'wp_handle_upload_prefilter', function ( $file ) {
 	if ( ! isset( $file['tmp_name'] ) || ! is_readable( $file['tmp_name'] ) ) {
 		return $file;
 	}
+	// Brak biblioteki (klon bez `composer install`) → NIE przepuszczaj surowego SVG.
+	if ( ! class_exists( 'Adwise_Svg_Sanitizer' ) ) {
+		$file['error'] = __( 'Sanitizer SVG niedostępny — uruchom `composer install` w theme.', 'adwise' );
+		return $file;
+	}
 	$content = file_get_contents( $file['tmp_name'] );
 	if ( false === $content ) {
 		return $file;
 	}
-	// UWAGA: to best-effort sanitizer regexowy — NIE jest kompletny (SVG to XML,
-	// wektory typu encje/CDATA/base64 go obchodzą). Na produkcji użyj `safe-svg`
-	// lub `enshrined/svg-sanitize`. Poniżej zamknięte tylko najczęstsze dziury.
-	$patterns = [
-		'/<script\b[^>]*>.*?<\/script>/is', // <script>...</script>
-		'/<script\b[^>]*\/?>/i',            // <script .../> self-closing (xlink:href)
-		'/<(foreignObject|use|animate|animateTransform|set|handler|listener)\b[^>]*>.*?<\/\1>/is',
-		'/<(foreignObject|use|animate|animateTransform|set)\b[^>]*\/?>/i',
-		'/<style\b[^>]*>.*?<\/style>/is',   // @import / url() w <style>
-		'/[\s\/]on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]*)/i', // on*= także <svg/onload=
-		'/(href|xlink:href)\s*=\s*("|\'|)\s*javascript:[^"\'>]*/i',
-		'/javascript\s*:/i',
-		'/<!ENTITY[^>]*>/i',
-		'/<!\[CDATA\[.*?\]\]>/is',
-	];
-	foreach ( $patterns as $p ) {
-		$out = preg_replace( $p, '', $content );
-		if ( null === $out ) { // pcre backtrack limit na dużym SVG → nie zapisuj popsutego
-			$file['error'] = 'Nie udało się zsanityzować SVG (zbyt złożony). Użyj wtyczki safe-svg.';
-			return $file;
-		}
-		$content = $out;
-	}
-	if ( stripos( $content, '<svg' ) === false ) {
-		$file['error'] = 'Niepoprawny SVG.';
+	$sanitizer = new Adwise_Svg_Sanitizer();
+	$sanitizer->removeRemoteReferences( true ); // tnij zewnętrzne referencje (SSRF/XXE)
+	$clean = $sanitizer->sanitize( $content );
+	if ( false === $clean || stripos( $clean, '<svg' ) === false ) {
+		$file['error'] = __( 'Niepoprawny lub niebezpieczny SVG (odrzucony przez sanitizer).', 'adwise' );
 		return $file;
 	}
-
-	if ( false === file_put_contents( $file['tmp_name'], $content ) ) {
-		$file['error'] = 'Nie udało się zapisać zsanityzowanego SVG.';
+	if ( false === file_put_contents( $file['tmp_name'], $clean ) ) {
+		$file['error'] = __( 'Nie udało się zapisać zsanityzowanego SVG.', 'adwise' );
 	}
 	return $file;
 } );

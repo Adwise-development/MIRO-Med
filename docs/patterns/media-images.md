@@ -176,42 +176,15 @@ Wtedy `✕` **przywraca domyślny asset** (nie czyści do pustego) — `onClick=
 
 ## SVG upload (jeśli user uploaduje ikony SVG)
 
-WP domyślnie blokuje SVG. Włącz z sanityzacją (`functions.php`), tylko dla zaufanych ról. Preferuj bibliotekę (`enshrined/svg-sanitize` / plugin Safe SVG). Konserwatywny fallback bez zależności:
+**Blueprint już to ma — NIE reimplementuj.** WP domyślnie blokuje SVG; baseline włącza go z twardą sanityzacją i guardem capability:
 
-```php
-// 1. Dozwól mime tylko dla zaufanych
-add_filter( 'upload_mimes', function ( $m ) {
-	if ( current_user_can( 'manage_options' ) ) { $m['svg'] = 'image/svg+xml'; $m['svgz'] = 'image/svg+xml'; }
-	return $m;
-} );
+- **Sanityzacja:** `enshrined/svg-sanitize` (parser XML + allowlist, **nie** regex). `vendor/` jest commitowany → świeży klon działa od razu. Kod: `functions.php` §SVG upload + `inc/class-adwise-svg-sanitizer.php` (subklasa domyka gołe zewnętrzne `href`/`xlink:href` poza `url(...)` — biblioteka sama łapie tylko `url(...)`).
+- **Guard capability:** upload tylko dla `edit_posts` (admin/editor/author); TEN SAM guard na `upload_mimes` i `wp_check_filetype_and_ext` (inaczej bypass w cron/sideload). Bez `svgz` (gzip → sanitizer tekstowy byłby no-opem).
+- **Preview** w bibliotece: CSS w `admin_head` (`functions.php`).
+- Klon bez `vendor/` (pominięty `composer install`) → filtr **odrzuca** SVG komunikatem, nie przepuszcza surowego.
 
-// 2. Wymuś poprawny mime (WP często myli SVG) — z TYM SAMYM guardem co upload_mimes,
-// inaczej filtr ślepo legalizuje SVG w kontekstach bez usera (cron/sideload) = bypass
-add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename ) {
-	if ( empty( $data['type'] ) && preg_match( '/\.svgz?$/i', $filename ) && current_user_can( 'manage_options' ) ) {
-		$data['ext'] = 'svg'; $data['type'] = 'image/svg+xml';
-	}
-	return $data;
-}, 10, 3 );
+Ścinane: `<script>`, handlery `on*`, `javascript:`, zewn. referencje (`url(http://…)`, gołe `//host` / `http(s):`), XXE/encje. Zachowane: wewn. `#id`, `data:`, względne ścieżki.
 
-// 3. Sanityzuj zawartość przed zapisem (usuń script/on*/javascript:)
-add_filter( 'wp_handle_upload_prefilter', function ( $file ) {
-	if ( ( $file['type'] ?? '' ) !== 'image/svg+xml' ) return $file;
-	$svg = file_get_contents( $file['tmp_name'] );
-	$svg = preg_replace( '#<(script|foreignObject|iframe|embed|object|use)[^>]*>.*?</\1>#is', '', $svg );
-	$svg = preg_replace( '#\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $svg );          // on* handlery
-	$svg = preg_replace( '#(href|xlink:href)\s*=\s*([\'"]?)\s*javascript:[^\'"> ]*#i', '', $svg ); // javascript: href
-	if ( stripos( $svg, '<svg' ) === false ) { $file['error'] = 'Niepoprawny SVG.'; return $file; }
-	file_put_contents( $file['tmp_name'], trim( $svg ) );
-	return $file;
-} );
-
-// 4. Miniatura SVG w bibliotece (WP nie zna wymiarów SVG)
-add_filter( 'wp_prepare_attachment_for_js', function ( $r ) {
-	if ( ( $r['mime'] ?? '' ) === 'image/svg+xml' ) { $r['icon'] = $r['url']; $r['sizes'] = []; }
-	return $r;
-} );
-```
 Inline SVG z Figmy (hardcoded) → `fill="currentColor"`.
 
 ---
