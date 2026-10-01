@@ -1,3 +1,14 @@
+# MIRO-Med — Pulmonology
+
+Motyw WordPress strony **Pulmonology** (Miro MED), zbudowany na **Adwise Blueprint**. Motyw i strona logowania — AdWise.
+
+- Lokalnie: `~/MiroMED` (Docker): front http://localhost:8109, panel `/wp-admin`, Mailpit http://localhost:8132.
+  To repo = katalog `wp-content/themes/adwise`; `docker-compose.yml`, `.env` i `mu-plugins/` leżą w `~/MiroMED` (poza repo).
+- Remote `origin` = ten projekt; remote `blueprint` = Adwise-development/Blueprint — `git pull blueprint main` pobiera zmiany blueprintu.
+- Design strony: czeka na przekazanie → `docs/first-run.md`.
+
+---
+
 # Adwise Blueprint
 
 WordPress block theme blueprint (LocalWP + GitHub). Dwie ścieżki budowy bloków: **Figma** lub **Claude Design (export)**. Budowa bloków identyczna — różni się tylko źródło designu.
