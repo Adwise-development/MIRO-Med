@@ -1,6 +1,6 @@
-# MIRO-Med — Pulmonology
+# MIRO Med
 
-Motyw WordPress strony **Pulmonology** (Miro MED), zbudowany na **Adwise Blueprint**. Motyw i strona logowania — AdWise.
+Motyw WordPress strony **MIRO Med**, zbudowany na **Adwise Blueprint**. Motyw i strona logowania — AdWise.
 
 - Lokalnie: `~/MiroMED` (Docker): front http://localhost:8109, panel `/wp-admin`, Mailpit http://localhost:8132.
   To repo = katalog `wp-content/themes/adwise`; `docker-compose.yml`, `.env` i `mu-plugins/` leżą w `~/MiroMED` (poza repo).
